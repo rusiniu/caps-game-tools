@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Caps Recruiter Pro — Оценка коллекционера</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Caps Game Tools">
+    <meta property="og:title" content="Caps Recruiter Pro — Оценка коллекционера">
+    <meta property="og:description" content="Оценка коллекционера: лига, Diamond, скорость фарма, копилка, достижения.">
+    <meta property="og:image" content="og-preview.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Caps Recruiter Pro — Оценка коллекционера">
+    <meta name="twitter:description" content="Оценка коллекционера: лига, Diamond, скорость фарма, копилка, достижения.">
+    <meta name="twitter:image" content="og-preview.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        /* ===== Поиск ===== */
+        .recruiter-search {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            padding: 1.5rem 1.8rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .recruiter-search label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .recruiter-search-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .recruiter-search-row .input-modern {
+            flex: 1;
+            min-width: 160px;
+            font-size: 1.05rem;
+            padding: 12px 20px;
+        }
+        .recruiter-search-hint {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 10px;
+        }
+
+        /* ===== Карточка игрока ===== */
+        .candidate-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            color: var(--text);
+        }
+
+        .candidate-header {
+            background: linear-gradient(105deg, var(--bg-header) 0%, var(--bg-header-2) 100%);
+            color: white;
+            padding: 1.3rem 1.8rem;
+            border-bottom: 3px solid var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .candidate-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .candidate-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 3px solid var(--accent);
+            flex-shrink: 0;
+        }
+        .candidate-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .candidate-name {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.15;
+        }
+
+        .candidate-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .cand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 11px;
+            border-radius: 40px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #fff;
+            white-space: nowrap;
+        }
+        .cand-badge.league {
+            background: linear-gradient(145deg, #5481ff, #2c53db);
+            border-color: rgba(255,255,255,0.25);
+        }
+        .cand-badge.score {
+            background: linear-gradient(145deg, #ffcd00, #e6b800);
+            color: #0f1419;
+            border-color: rgba(0,0,0,0.15);
+        }
+        .cand-badge.squad {
+            background: linear-gradient(145deg, #7c3aed, #5b21b6);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .candidate-since {
+            font-size: 0.78rem;
+            color: rgba(232,237,242,0.7);
+            white-space: nowrap;
+        }
+
+        .candidate-body {
+            padding: 1.5rem 1.8rem;
+        }
+
+        /* ===== Плитки метрик ===== */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 1.4rem;
+        }
+        .metric-tile {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 14px 12px;
+            text-align: center;
+            transition: 0.2s;
+        }
+        .metric-tile:hover {
+            border-color: rgba(255,205,0,0.35);
+            background: rgba(255,205,0,0.04);
+        }
+        .metric-tile .icon {
+            font-size: 1.4rem;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .metric-tile .value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1.1;
+            word-break: break-word;
+        }
+        .metric-tile .label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 900px) {
+            .metrics-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 480px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* ===== Секция ===== */
+        .section-block {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .section-block:last-child {
+            margin-bottom: 0;
+        }
+        .section-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--accent);
+            padding-left: 12px;
+            margin-bottom: 0.9rem;
+        }
+
+        /* ===== Редкости ===== */
+        .grades-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .grade-pill {
+            padding: 5px 14px;
+            border-radius: 40px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        /* ===== Боевая статистика ===== */
+        .battle-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .battle-grid .num {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text);
+            display: block;
+        }
+        .battle-grid .lbl {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        @media (max-width: 640px) {
+            .battle-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        }
+
+        .battle-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+            margin-top: 10px;
+            font-size: 0.82rem;
+        }
+        .streak-win { color: #4ade80; font-weight: 600; }
+        .streak-lose { color: #ff6b66; font-weight: 600; }
+
+        /* ===== Боссы ===== */
+        .bosses-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .boss-tile {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 0.85rem;
+            padding: 12px 8px;
+            text-align: center;
+            transition: 0.2s;
+        }
+        .boss-tile:hover {
+            border-color: rgba(255,205,0,0.35);
+        }
+        .boss-tile .boss-emoji {
+            font-size: 1.6rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .boss-tile .boss-name {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .boss-tile .boss-level {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--accent);
+            display: block;
+            margin-top: 2px;
+        }
+        @media (max-width: 640px) {
+            .bosses-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* ===== Достижения ===== */
+        .achievements-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .ach-badge {
+            background: rgba(255,255,255,0.07);
+            color: var(--text);
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid var(--border);
+        }
+        .ach-badge i {
+            color: var(--accent);
+        }
+
+        /* ===== Доп. информация ===== */
+        .extra-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            font-size: 0.82rem;
+            color: var(--text);
+        }
+        .extra-grid .extra-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .extra-grid .extra-item i {
+            color: var(--text-muted);
+        }
+
+        /* ===== Сворачиваемые события ===== */
+        .events-toggle {
+            cursor: pointer;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 0.82rem;
+        }
+        .events-toggle i {
+            transition: transform 0.2s;
+        }
+        .events-toggle.open i.arrow {
+            transform: rotate(90deg);
+        }
+        .events-content {
+            display: none;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .events-content.open {
+            display: flex;
+        }
+        .event-pill {
+            background: rgba(255,205,0,0.1);
+            color: var(--accent);
+            font-size: 0.68rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,205,0,0.25);
+        }
+
+        /* ===== Пустое/ошибка ===== */
+        .recruiter-empty, .recruiter-error {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            padding: 3rem 1.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            box-shadow: var(--shadow);
+        }
+        .recruiter-error {
+            border-color: rgba(255, 71, 64, 0.3);
+            color: var(--danger);
+        }
+        .recruiter-empty i, .recruiter-error i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 1rem;
+            color: var(--text-dim);
+        }
+        .recruiter-error i { color: var(--danger); }
+
+        @media (max-width: 640px) {
+            .candidate-header { padding: 1.1rem 1.2rem; }
+            .candidate-avatar { width: 56px; height: 56px; border-width: 2px; }
+            .candidate-name { font-size: 1.15rem; }
+            .candidate-body { padding: 1rem; }
+            .section-block { padding: 0.85rem 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="site-header">
+        <h1><i class="bi bi-person-badge"></i> Mad Caps Recruiter</h1>
+        <p>Оценка коллекционера: лига, Diamond, скорость фарма, копилка</p>
+        <div class="site-nav">
+            <a href="index.html" class="nav-link-custom"><i class="bi bi-house"></i> Портал</a>
+            <a href="market.html" class="nav-link-custom"><i class="bi bi-graph-up"></i> Минимальные цены</a>
+            <a href="staking.html" class="nav-link-custom"><i class="bi bi-thermometer-half"></i> Стейкинг</a>
+            <a href="collections.html" class="nav-link-custom"><i class="bi bi-images"></i> Галерея</a>
+            <a href="recruiter.html" class="nav-link-custom active"><i class="bi bi-person-badge"></i> Рекрутер</a>
+            <a href="finder.html" class="nav-link-custom"><i class="bi bi-search"></i> Финдер</a>
+        </div>
+    </div>
+
+    <!-- Поиск -->
+    <div class="recruiter-search">
+        <label><i class="bi bi-telegram"></i> TG ID кандидата</label>
+        <div class="recruiter-search-row">
+            <input type="number" id="tgIdInput" class="input-modern" placeholder="279747791" value="279747791" inputmode="numeric">
+            <button id="loadBtn" class="btn-gold" style="padding: 12px 28px; font-size: 0.95rem;">
+                <i class="bi bi-search"></i> Анализ
+            </button>
+        </div>
+        <div class="recruiter-search-hint">
+            Введите числовой ID — данные из открытого API игры
+        </div>
+    </div>
+
+    <div id="resultContainer">
+        <div id="loadingSkeleton" style="display: none;">
+            <div class="candidate-card">
+                <div class="candidate-header">
+                    <div style="display:flex;align-items:center;gap:16px;">
+                        <div class="skeleton" style="width:72px;height:72px;border-radius:50%;"></div>
+                        <div>
+                            <div class="skeleton" style="width: 200px; height: 22px; margin-bottom:8px;"></div>
+                            <div class="skeleton" style="width: 140px; height: 16px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="candidate-body">
+                    <div class="skeleton" style="height:80px; margin-bottom:12px;"></div>
+                    <div class="skeleton" style="height:120px;"></div>
+                </div>
+            </div>
+        </div>
+        <div id="profileContent"></div>
+    </div>
+
+    <div class="site-footer">
+        <i class="bi bi-cloud-check"></i> Данные из игры CapsGame (Firestore)
+    </div>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+(function() {
+    'use strict';
+
+    const {
+        escapeHtml,
+        buildImageUrl,
+        fetchPlayerProfile,
+        getUrlParam,
+        getFieldValue,
+        getSortedGrades,
+        getGradeClass,
+    } = window.CapsTools;
+
+    // Боссы — эмодзи и человекочитаемое имя
+    const KNOWN_BOSSES = {
+        lich:     { emoji: '🧙', name: 'Лич' },
+        shaokahn: { emoji: '🥋', name: 'Шао Кан' },
+        shredder: { emoji: '🗡️', name: 'Шреддер' },
+        velvet:   { emoji: '🎩', name: 'Вельвет' }
+    };
+
+    function bossMeta(key) {
+        if (KNOWN_BOSSES[key]) return KNOWN_BOSSES[key];
+        // Неизвестный босс — дефолтное эмодзи и имя из ключа
+        const name = key.charAt(0).toUpperCase() + key.slice(1);
+        return { emoji: '👾', name };
+    }
+
+    // Приводим технический ключ события к человекочитаемому виду.
+    // "madness-1"       -> "Madness 1"
+    // "easter-day"      -> "Easter Day"
+    // "pimpmycap-12"    -> "PimpMyCap 12"
+    // "new-year"        -> "New Year"
+    // "season-madness-1"-> "Season Madness 1"
+    function humanizeEvent(key) {
+        if (!key) return null;
+        return key
+            .split('-')
+            .filter(Boolean)
+            .map(part => {
+                // Если это число (или начинается с числа) — оставляем как есть
+                if (/^\d+$/.test(part)) return part;
+                // Иначе — с большой буквы
+                return part.charAt(0).toUpperCase() + part.slice(1);
+            })
+            .join(' ');
+    }
+
+    function collectEvents(fields) {
+        const map = fields || {};
+        const found = new Set();
+        for (const key of Object.keys(map)) {
+            if (!key.startsWith('caps_coins_balance')) continue;
+            let suffix = key.replace(/^caps_coins_balance_?/, '');
+            if (!suffix) continue;
+            if (suffix.endsWith('_prize')) continue; // награды, не ивенты
+            const label = humanizeEvent(suffix);
+            if (label) found.add(label);
+        }
+        return Array.from(found).sort();
+    }
+
+    function collectSkinSources(fields) {
+        const inv = fields.inventory?.mapValue?.fields;
+        const skins = inv?.skins?.arrayValue?.values || [];
+        const sources = new Set();
+        for (const s of skins) {
+            const src = s?.mapValue?.fields?.source?.stringValue;
+            if (src) sources.add(src);
+        }
+        return sources.size;
+    }
+
+    function formatNumberShort(n) {
+        if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
+        if (n >= 10_000) return (n / 1000).toFixed(1) + 'k';
+        return n.toLocaleString('ru-RU');
+    }
+
+    // ===== Рендер =====
+    function renderProfile(data) {
+        const fields = data.fields || {};
+
+        // Базовое
+        const username = getFieldValue(fields, 'username', '—');
+        const firstName = getFieldValue(fields, 'first_name', '');
+        const lastName = getFieldValue(fields, 'last_name', '');
+        const fullName = `${firstName} ${lastName}`.trim() || username;
+        const tgId = getFieldValue(fields, 'id', '—');
+        const league = getFieldValue(fields, 'league', '—');
+        const battleLevel = getFieldValue(fields, 'caps_battle_level', 0);
+        const pveNewLevel = getFieldValue(fields, 'caps_battle_pvenew_level', 0);
+        const stakingSpeed = getFieldValue(fields, 'stakingSpeed', 0);
+        const lastSignin = fields.lastSigninAt?.timestampValue
+            ? new Date(fields.lastSigninAt.timestampValue).toLocaleString('ru-RU')
+            : '—';
+        const createdAt = fields.caps_created_at?.timestampValue
+            ? new Date(fields.caps_created_at.timestampValue).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })
+            : '—';
+        const energy = fields.caps_energy?.mapValue?.fields?.value?.integerValue
+            ? Number(fields.caps_energy.mapValue.fields.value.integerValue)
+            : 0;
+
+        // Скор
+        const score = Number(fields.score?.integerValue || 0);
+
+        // Двор
+        const squadTitle = fields.caps_squad?.mapValue?.fields?.title?.stringValue || null;
+
+        // Notcoin-лига
+        const notcoinLeague = getFieldValue(fields, 'notcoinLeague', null);
+
+        // Кошелёк
+        const hasWallet = !!fields.caps_wallet?.stringValue;
+        const isPremium = fields.is_premium?.booleanValue === true;
+
+        // Аватар
+        const profileObj = fields.profile?.mapValue?.fields || {};
+        const avatarRawPath = profileObj.avatar?.mapValue?.fields?.url?.stringValue || null;
+        const avatarUrl = avatarRawPath ? buildImageUrl(avatarRawPath) : null;
+
+        // Копилка
+        const idleV2 = fields.caps_idle_v2?.mapValue?.fields || {};
+        const piggyLevelRaw = idleV2.level?.integerValue;
+        const piggyLevel = piggyLevelRaw !== undefined && piggyLevelRaw !== null
+            ? Number(piggyLevelRaw) + 1
+            : 0;
+
+        // Коллекции
+        const mycapsMap = fields.caps_mycaps_map?.mapValue?.fields || {};
+        const collectionsStats = mycapsMap.collections?.mapValue?.fields || {};
+        const totalChipsCount = Number(mycapsMap.count?.integerValue || 0);
+        let completedCollectionsCount = 0;
+        let totalCollectionsCount = 0;
+
+        const gradeStats = {
+            DIAMOND: 0, EPIC: 0, EPIC_PLUS: 0, RARE: 0, RARE_PLUS: 0,
+            COMMON: 0, COMMON_PLUS: 0, LEGEND: 0, LEGEND_PLUS: 0
+        };
+        if (mycapsMap.grades?.mapValue?.fields) {
+            const grades = mycapsMap.grades.mapValue.fields;
+            for (const [grade, val] of Object.entries(grades)) {
+                if (gradeStats.hasOwnProperty(grade) && val.integerValue !== undefined) {
+                    gradeStats[grade] = Number(val.integerValue);
+                }
+            }
+        }
+        for (const [, colData] of Object.entries(collectionsStats)) {
+            totalCollectionsCount++;
+            if (colData?.mapValue?.fields?.isComplete?.booleanValue === true) {
+                completedCollectionsCount++;
+            }
+        }
+
+        // Достижения
+        const achievementsArr = fields.achievements?.arrayValue?.values || [];
+        const allAchievements = achievementsArr.map(a => a.stringValue).filter(Boolean);
+
+        // Боевая статистика
+        const playedGames = fields.caps_played_games?.mapValue?.fields || {};
+        const pvpGames = Number(playedGames.pvp?.integerValue || 0);
+        const pveGames = Number(playedGames.pve?.integerValue || 0);
+        const madnessGames = Number(playedGames.madness?.integerValue || 0);
+        const exchangeGames = Number(playedGames.exchange?.integerValue || 0);
+
+        // PvP Grades Balance
+        const pvpGradesBalance = fields.caps_pvp_grades_balance?.mapValue?.fields || {};
+        const pvpGradesEntries = Object.entries(pvpGradesBalance)
+            .map(([grade, val]) => ({ grade, points: Number(val.integerValue || 0) }))
+            .filter(g => g.points !== 0);
+
+        // PvP Streaks
+        const pvpStreaks = fields.caps_pvp_streaks?.mapValue?.fields || {};
+        const winStreak = Number(pvpStreaks.win?.integerValue || 0);
+        const loseStreak = Number(pvpStreaks.lose?.integerValue || 0);
+        const lastResult = pvpStreaks.last?.stringValue || '—';
+
+        // Боссы
+        const bossesLevel = fields.caps_bosses_level?.mapValue?.fields || {};
+        const bossData = Object.entries(bossesLevel)
+            .map(([key, val]) => {
+                const meta = bossMeta(key);
+                const lvl = val?.integerValue;
+                return {
+                    key,
+                    emoji: meta.emoji,
+                    name: meta.name,
+                    level: lvl !== undefined && lvl !== null ? Number(lvl) : 0
+                };
+            })
+            .filter(b => b.level > 0)
+            // известные — в фиксированном порядке, новые — в конце
+            .sort((a, b) => {
+                const order = ['lich', 'shaokahn', 'shredder', 'velvet'];
+                const ai = order.indexOf(a.key);
+                const bi = order.indexOf(b.key);
+                if (ai === -1 && bi === -1) return a.key.localeCompare(b.key);
+                if (ai === -1) return 1;
+                if (bi === -1) return -1;
+                return ai - bi;
+            });
+
+        // Скины
+        const skinCount = collectSkinSources(fields);
+
+        // Market volume
+        const marketVolumeTotal = fields.marketVolume?.mapValue?.fields?.total?.doubleValue
+            || fields.marketVolume?.mapValue?.fields?.total?.integerValue
+            || 0;
+        const marketVolume = Number(marketVolumeTotal);
+
+        // События
+        const events = collectEvents(fields);
+
+        // Сортируем редкости
+        const sortedGrades = getSortedGrades(gradeStats);
+
+        // ===== HTML =====
+        let html = `
+        <div class="candidate-card fade-in">
+            <div class="candidate-header">
+                <div class="candidate-header-left">
+                    <div class="candidate-avatar">
+                        ${avatarUrl
+                            ? `<img src="${avatarUrl}" alt="avatar" loading="lazy" onerror="this.parentNode.innerHTML='<i class=\\'bi bi-person-circle\\' style=\\'font-size:2.5rem;color:rgba(255,255,255,0.4)\\'>'">`
+                            : '<i class="bi bi-person-circle" style="font-size:2.5rem;color:rgba(255,255,255,0.4);"></i>'
+                        }
+                    </div>
+                    <div style="min-width:0;">
+                        <h3 class="candidate-name">${escapeHtml(fullName)}</h3>
+                        <div class="candidate-badges">
+                            <span class="cand-badge"><i class="bi bi-at"></i> ${escapeHtml(username)}</span>
+                            <span class="cand-badge"><i class="bi bi-telegram"></i> ${escapeHtml(String(tgId))}</span>
+                            <span class="cand-badge league"><i class="bi bi-trophy-fill"></i> ${escapeHtml(league)}</span>
+                            ${score > 0 ? `<span class="cand-badge score"><i class="bi bi-star-fill"></i> ${formatNumberShort(score)}</span>` : ''}
+                            ${squadTitle ? `<span class="cand-badge squad"><i class="bi bi-people-fill"></i> ${escapeHtml(squadTitle)}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="candidate-since">
+                    <i class="bi bi-calendar-week"></i> с ${escapeHtml(createdAt)}
+                </div>
+            </div>
+
+            <div class="candidate-body">
+                <!-- 5 ключевых плиток -->
+                <div class="metrics-grid">
+                    <div class="metric-tile">
+                        <span class="icon">🏆</span>
+                        <div class="value">${escapeHtml(league)}</div>
+                        <div class="label">Лига</div>
+                    </div>
+                    <div class="metric-tile">
+                        <span class="icon">💎</span>
+                        <div class="value">${gradeStats.DIAMOND}</div>
+                        <div class="label">Diamond</div>
+                    </div>
+                    <div class="metric-tile">
+                        <span class="icon">⚡</span>
+                        <div class="value">${stakingSpeed.toFixed(2)}</div>
+                        <div class="label">Фарм/час</div>
+                    </div>
+                    <div class="metric-tile">
+                        <span class="icon">🐷</span>
+                        <div class="value">${piggyLevel}</div>
+                        <div class="label">Копилка</div>
+                    </div>
+                    <div class="metric-tile">
+                        <span class="icon">🎴</span>
+                        <div class="value">${formatNumberShort(totalChipsCount)}</div>
+                        <div class="label">Всего фишек</div>
+                    </div>
+                </div>
+
+                <!-- Редкости -->
+                <div class="section-block">
+                    <div class="section-title"><i class="bi bi-palette-fill"></i> Распределение по редкостям</div>
+                    <div class="grades-list">
+                        ${sortedGrades.map(({grade, count}) => `
+                            <span class="grade-pill ${getGradeClass(grade)}">
+                                ${grade.replace('_PLUS', '+')}: ${count}
+                            </span>
+                        `).join('')}
+                        ${sortedGrades.length === 0 ? '<span style="color:var(--text-muted);">Нет фишек</span>' : ''}
+                    </div>
+                    <div style="margin-top:10px; font-size:0.85rem;">
+                        <i class="bi bi-check2-circle" style="color:#4ade80;"></i>
+                        <strong>Завершено коллекций:</strong> ${completedCollectionsCount} из ${totalCollectionsCount}
+                    </div>
+                </div>
+
+                <!-- Боевая статистика -->
+                <div class="section-block">
+                    <div class="section-title"><i class="bi bi-crosshair"></i> Боевая статистика</div>
+                    <div class="battle-grid">
+                        <div><span class="num">${pvpGames}</span><span class="lbl">PvP</span></div>
+                        <div><span class="num">${pveGames}</span><span class="lbl">PvE</span></div>
+                        <div><span class="num">${pveNewLevel}</span><span class="lbl">PvE New</span></div>
+                        <div><span class="num">${madnessGames}</span><span class="lbl">Madness</span></div>
+                        <div><span class="num">${exchangeGames}</span><span class="lbl">Обмены</span></div>
+                    </div>
+                    ${pvpGradesEntries.length > 0 ? `
+                        <div class="battle-row">
+                            <span><i class="bi bi-trophy"></i> <strong>PvP очки:</strong></span>
+                            ${pvpGradesEntries.map(g => `<span style="color:var(--accent);font-weight:600;">${escapeHtml(g.grade)}: ${g.points}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="battle-row">
+                        <span class="${winStreak > 0 ? 'streak-win' : ''}" style="${winStreak > 0 ? '' : 'color:var(--text-muted);'}">
+                            <i class="bi bi-arrow-up-circle-fill"></i> Побед подряд: ${winStreak}
+                        </span>
+                        <span class="${loseStreak > 0 ? 'streak-lose' : ''}" style="${loseStreak > 0 ? '' : 'color:var(--text-muted);'}">
+                            <i class="bi bi-arrow-down-circle-fill"></i> Поражений подряд: ${loseStreak}
+                        </span>
+                        <span style="color:var(--text-muted);">
+                            <i class="bi bi-flag"></i> Последний: ${lastResult === 'win' ? '🏆 Победа' : lastResult === 'lose' ? '💀 Поражение' : escapeHtml(lastResult)}
+                        </span>
+                    </div>
+                </div>
+
+                ${bossData.length > 0 ? `
+                <!-- Боссы -->
+                <div class="section-block">
+                    <div class="section-title"><i class="bi bi-bug-fill"></i> Уровни боссов</div>
+                    <div class="bosses-grid">
+                        ${bossData.map(b => `
+                            <div class="boss-tile">
+                                <span class="boss-emoji">${b.emoji}</span>
+                                <div class="boss-name">${escapeHtml(b.name)}</div>
+                                <span class="boss-level">${b.level}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Достижения -->
+                <div class="section-block">
+                    <div class="section-title"><i class="bi bi-trophy-fill" style="color:var(--accent);"></i> Трофеи и достижения</div>
+                    <div class="achievements-list">
+                        ${allAchievements.slice(0, 28).map(ach =>
+                            `<span class="ach-badge"><i class="bi bi-award"></i> ${escapeHtml(ach)}</span>`
+                        ).join('')}
+                        ${allAchievements.length === 0 ? '<span style="color:var(--text-muted);">Нет отмеченных достижений</span>' : ''}
+                        ${allAchievements.length > 28 ? `<span class="ach-badge">+ ещё ${allAchievements.length - 28}</span>` : ''}
+                    </div>
+                </div>
+
+                <!-- Доп. информация -->
+                <div class="section-block">
+                    <div class="section-title"><i class="bi bi-info-circle"></i> Дополнительно</div>
+                    <div class="extra-grid">
+                        ${squadTitle ? `<span class="extra-item"><i class="bi bi-people-fill"></i> Двор: <strong>${escapeHtml(squadTitle)}</strong></span>` : ''}
+                        <span class="extra-item">
+                            <i class="bi bi-star-fill" style="color:${isPremium ? 'var(--accent)' : 'var(--text-dim)'};"></i>
+                            Premium: ${isPremium ? 'активен' : 'нет'}
+                        </span>
+                        <span class="extra-item">
+                            <i class="bi bi-wallet2"></i> Кошелёк: ${hasWallet ? 'привязан' : 'не привязан'}
+                        </span>
+                        <span class="extra-item">
+                            <i class="bi bi-lightning-charge-fill" style="color:var(--accent);"></i> Энергия: ${energy}
+                        </span>
+                        ${notcoinLeague ? `<span class="extra-item"><i class="bi bi-circle-fill" style="color:#cd7f32;"></i> Notcoin-лига: ${escapeHtml(notcoinLeague)}</span>` : ''}
+                        ${marketVolume > 0 ? `<span class="extra-item"><i class="bi bi-graph-up-arrow"></i> Торговля: ${marketVolume.toFixed(2)} TON</span>` : ''}
+                        ${skinCount > 0 ? `<span class="extra-item"><i class="bi bi-save"></i> Скины: ${skinCount}</span>` : ''}
+                        <span class="extra-item"><i class="bi bi-clock-history"></i> Был(а): ${escapeHtml(lastSignin)}</span>
+                    </div>
+                    ${events.length > 0 ? `
+                        <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">
+                            <span class="events-toggle" id="eventsToggle">
+                                <i class="bi bi-chevron-right arrow"></i>
+                                <i class="bi bi-calendar-event"></i>
+                                События: ${events.length}
+                            </span>
+                            <div class="events-content" id="eventsContent">
+                                ${events.map(e => `<span class="event-pill">${escapeHtml(e)}</span>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+        `;
+        return html;
+    }
+
+    // ===== Загрузка =====
+    async function loadPlayer(tgId) {
+        const loadingDiv = document.getElementById('loadingSkeleton');
+        const contentDiv = document.getElementById('profileContent');
+
+        if (!tgId || isNaN(tgId)) {
+            contentDiv.innerHTML = `
+                <div class="recruiter-error">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>Введите корректный числовой ID</strong>
+                </div>
+            `;
+            return;
+        }
+
+        loadingDiv.style.display = 'block';
+        contentDiv.innerHTML = '';
+
+        try {
+            const data = await fetchPlayerProfile(tgId);
+            contentDiv.innerHTML = renderProfile(data);
+
+            // Подключаем toggle событий
+            const toggle = document.getElementById('eventsToggle');
+            const content = document.getElementById('eventsContent');
+            if (toggle && content) {
+                toggle.addEventListener('click', () => {
+                    toggle.classList.toggle('open');
+                    content.classList.toggle('open');
+                });
+            }
+
+            const newUrl = `${window.location.pathname}?tg=${tgId}`;
+            window.history.replaceState({ tgId }, '', newUrl);
+        } catch (err) {
+            contentDiv.innerHTML = `
+                <div class="recruiter-error">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>Ошибка:</strong> ${escapeHtml(err.message)}<br>
+                    <small style="color:var(--text-muted);">Проверьте ID, интернет, возможно требуется CORS</small>
+                </div>
+            `;
+        } finally {
+            loadingDiv.style.display = 'none';
+        }
+    }
+
+    // ===== Обработчики =====
+    document.getElementById('loadBtn').addEventListener('click', function() {
+        const tgId = document.getElementById('tgIdInput').value.trim();
+        loadPlayer(tgId);
+    });
+
+    document.getElementById('tgIdInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('loadBtn').click();
+        }
+    });
+
+    // ===== Старт =====
+    window.addEventListener('DOMContentLoaded', function() {
+        const tgFromUrl = getUrlParam('tg');
+        const inputField = document.getElementById('tgIdInput');
+
+        if (tgFromUrl && !isNaN(tgFromUrl)) {
+            inputField.value = tgFromUrl;
+            loadPlayer(tgFromUrl);
+        } else {
+            const defaultId = inputField.value.trim();
+            if (defaultId && !isNaN(defaultId)) {
+                loadPlayer(defaultId);
+            }
+        }
+    });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Caps Market — Минимальные цены</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Caps Game Tools">
+    <meta property="og:title" content="Caps Market — Минимальные цены">
+    <meta property="og:description" content="Floor-цены на фишки Caps по коллекциям и редкостям — в TON и SOL.">
+    <meta property="og:image" content="og-preview.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Caps Market — Минимальные цены">
+    <meta name="twitter:description" content="Floor-цены на фишки Caps по коллекциям и редкостям — в TON и SOL.">
+    <meta name="twitter:image" content="og-preview.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        .market-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .market-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 60px;
+            border: 2px solid transparent;
+            background: var(--bg-card);
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text);
+            cursor: pointer;
+            transition: 0.2s;
+            user-select: none;
+        }
+        .market-tab:hover { transform: translateY(-2px); border-color: var(--border-strong); }
+        .market-tab.active { color: #0f1419; box-shadow: 0 8px 18px -8px rgba(0,0,0,0.6); }
+        .market-tab .tab-count {
+            background: rgba(255,255,255,0.1);
+            padding: 1px 9px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+        }
+        .market-tab.active .tab-count { background: rgba(0,0,0,0.18); color: #0f1419; }
+
+        /* Common — селект */
+        .common-select-wrap {
+            display: none;
+            margin-bottom: 1.5rem;
+        }
+        .common-select-wrap.visible { display: block; }
+
+        /* Сетка коллекций */
+        .collections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .collection-tile {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 14px 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            color: var(--text);
+            font-weight: 700;
+            font-size: 0.85rem;
+            line-height: 1.2;
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .collection-tile:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255,205,0,0.4);
+            box-shadow: var(--shadow);
+        }
+        .collection-tile.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(255,205,0,0.15);
+        }
+        .collection-tile .diamond-mark {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            font-size: 0.85rem;
+        }
+
+        /* Блок с ценами */
+        .prices-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            padding: 1.4rem 1.6rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+        .prices-block.visible { display: block; }
+
+        .prices-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 1.2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .prices-logo {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--bg-header) 0%, var(--bg-header-2) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 6px;
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+        }
+        .prices-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        .prices-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin: 0;
+            color: var(--text);
+        }
+        .prices-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+        .prices-sub strong { color: var(--accent); }
+
+        .prices-close {
+            margin-left: auto;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .prices-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+        /* Таблица цен */
+        .prices-table {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 10px 20px;
+            align-items: center;
+        }
+
+        @media (max-width: 640px) {
+            .prices-table {
+                grid-template-columns: 1fr auto;
+                gap: 8px 12px;
+            }
+            .prices-table .col-sol { display: none; }
+        }
+
+        .price-row {
+            display: contents;
+        }
+
+        .price-grade {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .grade-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .price-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        .price-value.empty { color: var(--text-dim); font-weight: 500; }
+
+        .price-value-sol {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #b6c9ff;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        .price-value-sol.empty { color: var(--text-dim); font-weight: 500; }
+
+        .col-header {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        .col-header.right { text-align: right; }
+
+        .prices-loading {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .prices-error {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            color: var(--danger);
+            font-size: 0.9rem;
+        }
+
+        .cache-note {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-align: right;
+            margin-top: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="site-header">
+        <h1><i class="bi bi-graph-up"></i> Аналитика рынка</h1>
+        <p>Минимальные цены на фишки Caps по коллекциям и редкостям</p>
+        <div class="site-nav">
+            <a href="index.html" class="nav-link-custom"><i class="bi bi-house"></i> Портал</a>
+            <a href="market.html" class="nav-link-custom active"><i class="bi bi-graph-up"></i> Минимальные цены</a>
+            <a href="staking.html" class="nav-link-custom"><i class="bi bi-thermometer-half"></i> Стейкинг</a>
+            <a href="collections.html" class="nav-link-custom"><i class="bi bi-images"></i> Галерея</a>
+            <a href="recruiter.html" class="nav-link-custom"><i class="bi bi-person-badge"></i> Рекрутер</a>
+            <a href="finder.html" class="nav-link-custom"><i class="bi bi-search"></i> Финдер</a>
+        </div>
+    </div>
+
+    <div class="market-tabs" id="marketTabs"></div>
+
+    <div class="common-select-wrap" id="commonSelectWrap">
+        <select class="select-modern" id="commonSelect">
+            <option value="">— Выберите коллекцию —</option>
+        </select>
+    </div>
+
+    <div class="collections-grid" id="collectionsGrid"></div>
+
+    <div class="prices-block" id="pricesBlock">
+        <div class="prices-header">
+            <div class="prices-logo" id="pricesLogo"></div>
+            <div>
+                <h2 class="prices-title" id="pricesTitle">—</h2>
+                <div class="prices-sub" id="pricesSub"></div>
+            </div>
+            <button class="prices-close" id="pricesClose" aria-label="Закрыть">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div id="pricesContent"></div>
+    </div>
+
+    <div class="site-footer">
+        <i class="bi bi-cloud-check"></i> Данные из игры CapsGame (Firestore)
+    </div>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+(function() {
+    'use strict';
+
+    const {
+        escapeHtml,
+        fetchCollectionsList,
+        getCollectionTypeInfo,
+        buildCollectionLogoUrl,
+        fetchCollectionFloors
+    } = window.CapsTools;
+
+    const TYPE_ORDER = ['special', 'event', 'community', 'premium', 'common'];
+    const GRADE_ORDER = ['COMMON', 'COMMON_PLUS', 'RARE', 'RARE_PLUS', 'EPIC', 'EPIC_PLUS', 'LEGEND', 'LEGEND_PLUS', 'DIAMOND'];
+
+    // Цвета для точек редкостей (совпадают с common.css)
+    const GRADE_COLORS = {
+        'COMMON': '#94a3b8',
+        'COMMON_PLUS': '#94a3b8',
+        'RARE': '#22c55e',
+        'RARE_PLUS': '#22c55e',
+        'EPIC': '#3b82f6',
+        'EPIC_PLUS': '#3b82f6',
+        'LEGEND': '#f59e0b',
+        'LEGEND_PLUS': '#f59e0b',
+        'DIAMOND': '#06b6d4'
+    };
+
+    let collectionsList = [];
+    let currentType = 'special';
+    let currentCollectionId = null;
+
+
+
+    // ===== Рендер табов =====
+    function renderTabs() {
+        const tabsEl = document.getElementById('marketTabs');
+        const counts = {};
+        collectionsList.forEach(c => { counts[c.type] = (counts[c.type] || 0) + 1; });
+
+        const types = TYPE_ORDER.filter(t => counts[t] > 0);
+
+        if (types.length === 0) {
+            tabsEl.innerHTML = '<div style="padding:1rem;color:var(--text-muted);">Нет коллекций</div>';
+            return;
+        }
+
+        tabsEl.innerHTML = types.map(type => {
+            const info = getCollectionTypeInfo(type);
+            const isActive = type === currentType;
+            const style = isActive ? `background:${info.color}; border-color:${info.color};` : '';
+            return `
+                <div class="market-tab ${isActive ? 'active' : ''}" data-type="${escapeHtml(type)}" style="${style}">
+                    <span>${info.emoji}</span>
+                    <span>${escapeHtml(info.label)}</span>
+                    <span class="tab-count">${counts[type]}</span>
+                </div>
+            `;
+        }).join('');
+
+        tabsEl.querySelectorAll('.market-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                currentType = tab.dataset.type;
+                currentCollectionId = null;
+                closePrices();
+                renderTabs();
+                renderCollections();
+            });
+        });
+    }
+
+    // ===== Рендер коллекций выбранного таба =====
+    function renderCollections() {
+        const items = collectionsList.filter(c => c.type === currentType);
+        const gridEl = document.getElementById('collectionsGrid');
+        const commonWrap = document.getElementById('commonSelectWrap');
+
+        if (currentType === 'common') {
+            // Common — селект, не сетка
+            gridEl.style.display = 'none';
+            commonWrap.classList.add('visible');
+
+            const select = document.getElementById('commonSelect');
+            select.innerHTML = '<option value="">— Выберите коллекцию —</option>' +
+                items.map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.title)} (${c.size})</option>`).join('');
+
+            select.onchange = () => {
+                const id = select.value;
+                if (!id) { closePrices(); return; }
+                currentCollectionId = id;
+                openPrices(id);
+            };
+            return;
+        }
+
+        gridEl.style.display = 'grid';
+        commonWrap.classList.remove('visible');
+
+        if (items.length === 0) {
+            gridEl.innerHTML = '<div style="padding:2rem;color:var(--text-muted);text-align:center;">Пусто</div>';
+            return;
+        }
+
+        gridEl.innerHTML = items.map(col => `
+            <div class="collection-tile ${col.id === currentCollectionId ? 'active' : ''}" data-id="${escapeHtml(col.id)}">
+                ${col.hasCustomDiamond ? '<span class="diamond-mark">💎</span>' : ''}
+                <span>${escapeHtml(col.title)}</span>
+            </div>
+        `).join('');
+
+        gridEl.querySelectorAll('.collection-tile').forEach(el => {
+            el.addEventListener('click', () => {
+                const id = el.dataset.id;
+                currentCollectionId = id;
+                gridEl.querySelectorAll('.collection-tile').forEach(t => t.classList.remove('active'));
+                el.classList.add('active');
+                openPrices(id);
+            });
+        });
+    }
+
+    // ===== Открытие блока цен =====
+    async function openPrices(collectionId) {
+        const col = collectionsList.find(c => c.id === collectionId);
+        if (!col) return;
+
+        const block = document.getElementById('pricesBlock');
+        const logoEl = document.getElementById('pricesLogo');
+        const titleEl = document.getElementById('pricesTitle');
+        const subEl = document.getElementById('pricesSub');
+        const contentEl = document.getElementById('pricesContent');
+
+        block.classList.add('visible');
+
+        const logoUrl = col.hasLogo ? buildCollectionLogoUrl(col.id) : null;
+        logoEl.innerHTML = logoUrl
+            ? `<img src="${logoUrl}" alt="" onerror="this.parentNode.innerHTML='<span style=\\'font-size:1.4rem;opacity:0.4\\'>🎴</span>'">`
+            : '<span style="font-size:1.4rem;opacity:0.4;">🎴</span>';
+
+        titleEl.textContent = col.title;
+        subEl.innerHTML = `🎴 ${col.size} фишек · ищем минимальные цены…`;
+
+        contentEl.innerHTML = '<div class="prices-loading">⏳ Загрузка цен…</div>';
+
+        // Плавный скролл к блоку
+        block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        try {
+            const byGrade = await fetchCollectionFloors(collectionId);
+            renderPrices(col, byGrade);
+        } catch (err) {
+            contentEl.innerHTML = `<div class="prices-error">Ошибка загрузки: ${escapeHtml(err.message)}</div>`;
+        }
+    }
+
+    // ===== Рендер таблицы цен =====
+    function renderPrices(col, byGrade) {
+        const subEl = document.getElementById('pricesSub');
+        const contentEl = document.getElementById('pricesContent');
+
+        // Минимальная цена по всем редкостям (ton) — для подписи «От: …»
+        let minTon = null;
+        let minGrade = null;
+        for (const grade of GRADE_ORDER) {
+            const v = byGrade[grade]?.ton;
+            if (v !== null && v !== undefined && (minTon === null || v < minTon)) {
+                minTon = v;
+                minGrade = grade;
+            }
+        }
+
+        subEl.innerHTML = minTon !== null
+            ? `От: <strong>${minTon.toFixed(4)} TON</strong> (${escapeHtml(minGrade)})`
+            : 'Нет активных предложений';
+
+        const rows = [];
+        rows.push(`<div class="col-header">Редкость</div><div class="col-header right">TON</div><div class="col-header right col-sol">SOL</div>`);
+
+        for (const grade of GRADE_ORDER) {
+            const data = byGrade[grade] || { ton: null, sol: null };
+            const color = GRADE_COLORS[grade] || '#94a3b8';
+            const label = grade.replace('_PLUS', '+');
+
+            const tonText = data.ton !== null ? data.ton.toFixed(4) : '—';
+            const solText = data.sol !== null ? data.sol.toFixed(4) : '—';
+
+            rows.push(`
+                <div class="price-grade">
+                    <span class="grade-dot" style="background:${color};"></span>
+                    <span>${escapeHtml(label)}</span>
+                </div>
+                <div class="price-value ${data.ton === null ? 'empty' : ''}">${tonText}</div>
+                <div class="price-value-sol col-sol ${data.sol === null ? 'empty' : ''}">${solText}</div>
+            `);
+        }
+
+        contentEl.innerHTML = `
+            <div class="prices-table">${rows.join('')}</div>
+            <div class="cache-note">Кэш 15 мин · максимум 1000 лотов на коллекцию</div>
+        `;
+    }
+
+    function closePrices() {
+        document.getElementById('pricesBlock').classList.remove('visible');
+        currentCollectionId = null;
+        document.querySelectorAll('.collection-tile.active').forEach(t => t.classList.remove('active'));
+        const sel = document.getElementById('commonSelect');
+        if (sel) sel.value = '';
+    }
+
+    document.getElementById('pricesClose').addEventListener('click', closePrices);
+
+    // ===== Старт =====
+    async function init() {
+        collectionsList = await fetchCollectionsList();
+        if (!collectionsList.length) {
+            document.getElementById('marketTabs').innerHTML = '<div style="color:var(--danger);">Не удалось загрузить коллекции</div>';
+            return;
+        }
+
+        currentType = TYPE_ORDER.find(t => collectionsList.some(c => c.type === t)) || collectionsList[0].type;
+        renderTabs();
+        renderCollections();
+    }
+
+    init();
+})();
+</script>
+</body>
+</html>

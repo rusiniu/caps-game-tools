@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Caps Squad Requests — Заявки во двор</title>
+    <!-- Запрет индекса -->
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Caps Game Tools">
+    <meta property="og:title" content="Caps Squad Requests — Заявки во двор">
+    <meta property="og:description" content="Просмотр заявок на вступление во двор — статус и кандидаты.">
+    <meta property="og:image" content="og-preview.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Caps Squad Requests — Заявки во двор">
+    <meta name="twitter:description" content="Просмотр заявок на вступление во двор — статус и кандидаты.">
+    <meta name="twitter:image" content="og-preview.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        /* ===== Шапка двора ===== */
+        .squad-header {
+            /* уже есть в common.css, только усиливаем */
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        /* ===== Фильтры ===== */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-bar .btn-outline-filter {
+            border-radius: 60px;
+            padding: 8px 20px;
+            border: 2px solid var(--border-strong);
+            background: var(--bg-card);
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.82rem;
+            transition: 0.2s;
+            cursor: pointer;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .filter-bar .btn-outline-filter.active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: #0f1419;
+        }
+        .filter-bar .btn-outline-filter:hover:not(.active) {
+            border-color: var(--accent);
+        }
+
+        .filter-bar .filter-spacer { flex: 1; }
+
+        .filter-bar .refresh-btn {
+            border-radius: 60px;
+            padding: 8px 14px;
+            border: 2px solid var(--accent);
+            background: transparent;
+            color: var(--accent);
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .filter-bar .refresh-btn:hover {
+            background: var(--accent);
+            color: #0f1419;
+        }
+
+        .filter-bar .last-updated {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* ===== Карточка заявки ===== */
+        .request-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1.2rem;
+            padding: 1rem 1.2rem;
+            margin-bottom: 0.85rem;
+            transition: 0.2s;
+        }
+        .request-card:hover {
+            border-color: rgba(255,205,0,0.35);
+            box-shadow: var(--shadow);
+        }
+
+        .request-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .avatar-mini {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--bg-elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 2px solid var(--accent);
+            font-size: 1.5rem;
+            color: rgba(255,255,255,0.4);
+        }
+        .avatar-mini img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .request-info {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .request-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .request-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .request-meta-row .meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .request-meta-row code {
+            background: rgba(255,255,255,0.06);
+            padding: 1px 6px;
+            border-radius: 6px;
+            font-family: 'Inter', monospace;
+            font-size: 0.72rem;
+            color: var(--text);
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        /* Кнопка «Профиль» */
+        .profile-btn {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            border-radius: 60px;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .profile-btn:hover {
+            background: var(--accent);
+            color: #0f1419;
+        }
+
+        /* Статус-бейджи — уже есть в common.css (.pending-badge / .accepted-badge / .rejected-badge) */
+
+        /* ===== Скелетон ===== */
+        .request-card.skeleton-card {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+        .skeleton-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .skeleton-lines {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .skeleton-line {
+            height: 12px;
+            border-radius: 6px;
+        }
+
+        /* ===== Пусто/ошибка ===== */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--text-dim);
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .error-box {
+            background: rgba(255,71,64,0.08);
+            border: 1px solid rgba(255,71,64,0.3);
+            color: var(--danger);
+            border-radius: 1rem;
+            padding: 1.2rem 1.4rem;
+            text-align: center;
+        }
+
+        /* ===== Мобильная адаптация ===== */
+        @media (max-width: 640px) {
+            .request-row {
+                gap: 10px;
+            }
+            .request-actions {
+                width: 100%;
+            }
+            .profile-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .squad-header .squad-title {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="site-header">
+        <h1><i class="bi bi-door-open"></i> Заявки во двор</h1>
+        <p>Просмотр заявок на вступление во двор — статус и кандидаты</p>
+        <div class="site-nav">
+            <a href="index.html" class="nav-link-custom"><i class="bi bi-house"></i> Портал</a>
+            <a href="market.html" class="nav-link-custom"><i class="bi bi-graph-up"></i> Минимальные цены</a>
+            <a href="staking.html" class="nav-link-custom"><i class="bi bi-thermometer-half"></i> Стейкинг</a>
+            <a href="collections.html" class="nav-link-custom"><i class="bi bi-images"></i> Галерея</a>
+            <a href="recruiter.html" class="nav-link-custom"><i class="bi bi-person-badge"></i> Рекрутер</a>
+            <a href="finder.html" class="nav-link-custom"><i class="bi bi-search"></i> Финдер</a>
+            <a href="squad-requests.html" class="nav-link-custom active"><i class="bi bi-door-open"></i> Заявки</a>
+        </div>
+    </div>
+
+    <!-- Шапка двора -->
+    <div class="squad-header" id="squadHeader">
+        <div class="squad-avatar" id="squadAvatar">
+            <i class="bi bi-shield-fill-check" style="font-size:1.8rem; color:rgba(255,255,255,0.4);"></i>
+        </div>
+        <div>
+            <div class="squad-title" id="squadName">Загрузка…</div>
+        </div>
+    </div>
+
+    <!-- Скрытый инпут для ?squad= (оставляем как было) -->
+    <div id="squadIdInputWrapper" style="display:none; margin-bottom:1rem;">
+        <input type="text" id="squadIdInput" class="input-modern" value="">
+    </div>
+
+    <!-- Фильтры -->
+    <div class="filter-bar">
+        <button class="btn-outline-filter" data-filter="all">Все (<span id="countAll">0</span>)</button>
+        <button class="btn-outline-filter active" data-filter="PENDING">⏳ PENDING (<span id="countPending">0</span>)</button>
+        <button class="btn-outline-filter" data-filter="ACCEPTED">✅ ACCEPTED (<span id="countAccepted">0</span>)</button>
+        <button class="btn-outline-filter" data-filter="REJECTED">❌ REJECTED (<span id="countRejected">0</span>)</button>
+        <span class="filter-spacer"></span>
+        <span class="last-updated" id="lastUpdated"></span>
+        <button id="refreshBtn" class="refresh-btn" title="Обновить">
+            <i class="bi bi-arrow-repeat"></i>
+        </button>
+    </div>
+
+    <!-- Список заявок -->
+    <div id="requestsContainer">
+        <div id="loadingSkeleton" style="display: none;">
+            <div class="request-card skeleton-card">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-lines">
+                    <div class="skeleton skeleton-line" style="width:40%;"></div>
+                    <div class="skeleton skeleton-line" style="width:60%;"></div>
+                    <div class="skeleton skeleton-line" style="width:30%;"></div>
+                </div>
+            </div>
+            <div class="request-card skeleton-card">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-lines">
+                    <div class="skeleton skeleton-line" style="width:40%;"></div>
+                    <div class="skeleton skeleton-line" style="width:60%;"></div>
+                    <div class="skeleton skeleton-line" style="width:30%;"></div>
+                </div>
+            </div>
+            <div class="request-card skeleton-card">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-lines">
+                    <div class="skeleton skeleton-line" style="width:40%;"></div>
+                    <div class="skeleton skeleton-line" style="width:60%;"></div>
+                    <div class="skeleton skeleton-line" style="width:30%;"></div>
+                </div>
+            </div>
+        </div>
+        <div id="requestsList"></div>
+    </div>
+
+    <div class="site-footer">
+        <i class="bi bi-cloud-check"></i> Данные из игры CapsGame (Firestore)
+    </div>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+(function() {
+    'use strict';
+
+    const {
+        getFieldValue, escapeHtml, buildImageUrl, formatTime,
+        fetchSquadInfo, fetchAllRequests, fetchPlayerProfile
+    } = window.CapsTools;
+
+    // Активный двор: по умолчанию — CONFIG.SQUAD_ID, при ?squad= переопределяется
+    let currentSquadId = window.CapsTools.CONFIG.SQUAD_ID;
+
+    // Вкладка PENDING по умолчанию
+    let allRequests = [];
+    let currentFilter = 'PENDING';
+
+    function getStatusBadge(status) {
+        const map = {
+            'PENDING': '<span class="pending-badge"><i class="bi bi-clock-history"></i> PENDING</span>',
+            'ACCEPTED': '<span class="accepted-badge"><i class="bi bi-check-circle-fill"></i> ACCEPTED</span>',
+            'REJECTED': '<span class="rejected-badge"><i class="bi bi-x-circle-fill"></i> REJECTED</span>'
+        };
+        return map[status] || `<span class="request-meta">${escapeHtml(status)}</span>`;
+    }
+
+    function renderRequests(requests, filter = 'all') {
+        const container = document.getElementById('requestsList');
+        const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter);
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h5 style="color:var(--text); margin-bottom:0.5rem;">Нет заявок</h5>
+                    <p>По текущему фильтру заявок не найдено</p>
+                </div>
+            `;
+            return;
+        }
+
+        const sorted = [...filtered].sort((a, b) => {
+            if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+            if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;
+            return (a.createdAt || '').localeCompare(b.createdAt || '');
+        });
+
+        let html = '';
+        for (const req of sorted) {
+            const statusBadge = getStatusBadge(req.status);
+            const dateStr = formatTime(req.createdAt);
+            const userId = req.userId || req.id;
+
+            html += `
+                <div class="request-card fade-in" data-status="${req.status}" data-userid="${escapeHtml(String(userId))}">
+                    <div class="request-row">
+                        <div class="avatar-mini" id="avatar-${escapeHtml(String(userId))}">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <div class="request-info">
+                            <div class="request-name">
+                                <span id="username-${escapeHtml(String(userId))}">Загрузка…</span>
+                                ${statusBadge}
+                            </div>
+                            <div class="request-meta-row">
+                                <span class="meta-item"><i class="bi bi-person"></i> ID: <code>${escapeHtml(String(userId))}</code></span>
+                                <span class="meta-item"><i class="bi bi-calendar3"></i> ${dateStr}</span>
+                                <span class="meta-item"><i class="bi bi-hash"></i> ${escapeHtml(req.id)}</span>
+                            </div>
+                        </div>
+                        <div class="request-actions">
+                            <a href="recruiter.html?tg=${encodeURIComponent(String(userId))}" target="_blank" rel="noopener" class="profile-btn">
+                                <i class="bi bi-person-badge"></i> Профиль
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+
+        for (const req of sorted) {
+            const userId = req.userId || req.id;
+            loadUserData(userId);
+        }
+    }
+
+    async function loadUserData(userId) {
+        const uid = String(userId);
+        const usernameEl = document.getElementById(`username-${uid}`);
+        const avatarEl = document.getElementById(`avatar-${uid}`);
+        if (!usernameEl) return;
+
+        try {
+            const data = await fetchPlayerProfile(uid);
+            if (data && data.fields) {
+                const fields = data.fields;
+                const firstName = getFieldValue(fields, 'first_name', '');
+                const lastName = getFieldValue(fields, 'last_name', '');
+                const username = getFieldValue(fields, 'username', '');
+                const fullName = `${firstName} ${lastName}`.trim() || username || `ID ${uid}`;
+                usernameEl.textContent = fullName;
+
+                const profile = fields.profile?.mapValue?.fields || {};
+                const avatarPath = profile.avatar?.mapValue?.fields?.url?.stringValue || null;
+                if (avatarPath && avatarEl) {
+                    const img = document.createElement('img');
+                    img.src = buildImageUrl(avatarPath);
+                    img.alt = 'avatar';
+                    img.onerror = () => { avatarEl.innerHTML = '<i class="bi bi-person-circle"></i>'; };
+                    avatarEl.innerHTML = '';
+                    avatarEl.appendChild(img);
+                }
+            } else {
+                usernameEl.textContent = `Пользователь ${uid}`;
+            }
+        } catch {
+            usernameEl.textContent = `Пользователь ${uid}`;
+        }
+    }
+
+    function updateCounts(requests) {
+        const total = requests.length;
+        const pending = requests.filter(r => r.status === 'PENDING').length;
+        const accepted = requests.filter(r => r.status === 'ACCEPTED').length;
+        const rejected = requests.filter(r => r.status === 'REJECTED').length;
+
+        document.getElementById('countAll').textContent = total;
+        document.getElementById('countPending').textContent = pending;
+        document.getElementById('countAccepted').textContent = accepted;
+        document.getElementById('countRejected').textContent = rejected;
+    }
+
+    async function loadAll() {
+        const squadId = currentSquadId;
+        const loadingEl = document.getElementById('loadingSkeleton');
+        const listEl = document.getElementById('requestsList');
+
+        loadingEl.style.display = 'block';
+        listEl.innerHTML = '';
+        allRequests = [];
+
+        try {
+            const squadData = await fetchSquadInfo(squadId);
+            if (squadData && squadData.fields) {
+                const fields = squadData.fields;
+                const title = getFieldValue(fields, 'title', 'Без названия');
+                document.getElementById('squadName').textContent = title;
+
+                const smallPhoto = getFieldValue(fields, 'smallPhoto', null);
+                const bigPhoto = getFieldValue(fields, 'bigPhoto', null);
+                const photoUrl = smallPhoto || bigPhoto;
+                const avatarContainer = document.getElementById('squadAvatar');
+                if (photoUrl) {
+                    const img = document.createElement('img');
+                    img.src = photoUrl;
+                    img.alt = 'squad avatar';
+                    img.onerror = () => {
+                        avatarContainer.innerHTML = '<i class="bi bi-shield-fill-check" style="font-size:1.8rem;color:rgba(255,255,255,0.4);"></i>';
+                    };
+                    avatarContainer.innerHTML = '';
+                    avatarContainer.appendChild(img);
+                }
+            } else {
+                document.getElementById('squadName').textContent = `Двор ${squadId}`;
+            }
+
+            const requests = await fetchAllRequests(squadId);
+            allRequests = requests;
+
+            updateCounts(requests);
+            renderRequests(requests, currentFilter);
+            document.getElementById('lastUpdated').textContent = `Обновлено: ${new Date().toLocaleTimeString('ru-RU')}`;
+
+        } catch (err) {
+            listEl.innerHTML = `
+                <div class="error-box">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size:1.6rem; display:block; margin-bottom:8px;"></i>
+                    <strong>Ошибка загрузки:</strong> ${escapeHtml(err.message)}
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">Проверьте подключение к интернету или доступность Firestore</div>
+                </div>
+            `;
+            document.getElementById('squadName').textContent = 'Ошибка загрузки';
+        } finally {
+            loadingEl.style.display = 'none';
+        }
+    }
+
+    function bindFilters() {
+        document.querySelectorAll('[data-filter]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.filter;
+                renderRequests(allRequests, currentFilter);
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // ?squad= в URL — переопределение двора
+        const params = new URLSearchParams(window.location.search);
+        const squadParam = params.get('squad');
+        if (squadParam) {
+            currentSquadId = squadParam;
+            document.getElementById('squadIdInputWrapper').style.display = 'block';
+            document.getElementById('squadIdInput').value = squadParam;
+        }
+
+        bindFilters();
+        document.getElementById('refreshBtn').addEventListener('click', loadAll);
+        loadAll();
+    });
+})();
+</script>
+</body>
+</html>

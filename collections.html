@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Caps Game — Галерея коллекций</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Caps Game Tools">
+    <meta property="og:title" content="Caps Game — Галерея коллекций">
+    <meta property="og:description" content="Просмотр всех фишек коллекции с изображениями, тиражом и датой релиза.">
+    <meta property="og:image" content="og-preview.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Caps Game — Галерея коллекций">
+    <meta name="twitter:description" content="Просмотр всех фишек коллекции с изображениями, тиражом и датой релиза.">
+    <meta name="twitter:image" content="og-preview.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+<div class="app-container">
+    <div class="site-header">
+        <h1><i class="bi bi-images"></i> Галерея коллекций</h1>
+        <p>Просмотр всех фишек коллекции</p>
+        <div class="site-nav">
+            <a href="index.html" class="nav-link-custom"><i class="bi bi-house"></i> Портал</a>
+            <a href="market.html" class="nav-link-custom"><i class="bi bi-graph-up"></i> Минимальные цены</a>
+            <a href="staking.html" class="nav-link-custom"><i class="bi bi-thermometer-half"></i> Стейкинг</a>
+            <a href="collections.html" class="nav-link-custom active"><i class="bi bi-images"></i> Галерея</a>
+            <a href="recruiter.html" class="nav-link-custom"><i class="bi bi-person-badge"></i> Рекрутер</a>
+            <a href="finder.html" class="nav-link-custom"><i class="bi bi-search"></i> Финдер</a>
+        </div>
+    </div>
+
+    <!-- Табы по типам коллекций -->
+    <div class="collection-tabs" id="collectionTabs">
+        <div style="padding: 1rem; color: var(--text-muted);">Загрузка типов…</div>
+    </div>
+
+    <!-- Сетка мини-карточек коллекций выбранного таба -->
+    <div class="collection-mini-grid" id="collectionMiniGrid" style="display: none;"></div>
+
+    <div class="site-footer">
+        <i class="bi bi-cloud-check"></i> Данные из игры CapsGame (Firestore)
+    </div>
+</div>
+
+<!-- МОДАЛКА -->
+<div class="modal-overlay" id="collectionModal">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-header">
+            <div class="modal-header-left">
+                <div class="modal-header-logo" id="modalLogo"></div>
+                <div style="min-width: 0;">
+                    <h3 id="modalTitle">—</h3>
+                    <div class="modal-header-designer" id="modalDesigner" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="modal-header-right">
+                <button class="modal-close" id="modalClose" aria-label="Закрыть">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- Сюда вставляем пилюли + галерею фишек -->
+        </div>
+    </div>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+(function() {
+    const {
+        fetchCollectionsList,
+        escapeHtml,
+        getCollectionTypeInfo,
+        getCollectionStatusInfo,
+        buildCollectionLogoUrl,
+        buildCollectionChipUrl
+    } = window.CapsTools;
+
+    const TYPE_ORDER = ['common', 'special', 'event', 'community', 'premium'];
+
+    let collectionsList = [];
+    let currentType = 'common';
+    let lastFocusedCard = null;
+
+    const modalEl = document.getElementById('collectionModal');
+    const modalBody = document.getElementById('modalBody');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalLogo = document.getElementById('modalLogo');
+    const modalDesigner = document.getElementById('modalDesigner');
+
+    // ---------- Табы ----------
+    function renderTabs() {
+        const tabsEl = document.getElementById('collectionTabs');
+
+        const counts = {};
+        collectionsList.forEach(c => {
+            counts[c.type] = (counts[c.type] || 0) + 1;
+        });
+
+        const types = TYPE_ORDER.filter(t => counts[t] > 0)
+            .concat(Object.keys(counts).filter(t => !TYPE_ORDER.includes(t)));
+
+        if (types.length === 0) {
+            tabsEl.innerHTML = '<div style="padding:1rem;color:var(--text-muted);">Нет коллекций</div>';
+            return;
+        }
+
+        tabsEl.innerHTML = types.map(type => {
+            const info = getCollectionTypeInfo(type);
+            const isActive = type === currentType;
+            const style = isActive
+                ? `background:${info.color}; border-color:${info.color};`
+                : '';
+            return `
+                <div class="collection-tab ${isActive ? 'active' : ''}"
+                     data-type="${escapeHtml(type)}"
+                     style="${style}">
+                    <span>${info.emoji}</span>
+                    <span>${escapeHtml(info.label)}</span>
+                    <span class="tab-count">${counts[type]}</span>
+                </div>
+            `;
+        }).join('');
+
+        tabsEl.querySelectorAll('.collection-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                currentType = tab.dataset.type;
+                renderTabs();
+                renderMiniGrid();
+            });
+        });
+    }
+
+    // ---------- Сетка мини-карточек ----------
+    function renderMiniGrid() {
+        const gridEl = document.getElementById('collectionMiniGrid');
+        const items = collectionsList.filter(c => c.type === currentType);
+
+        if (items.length === 0) {
+            gridEl.style.display = 'none';
+            return;
+        }
+        gridEl.style.display = 'grid';
+
+        gridEl.innerHTML = items.map(col => {
+            const statusInfo = getCollectionStatusInfo(col.status);
+            const logoUrl = col.hasLogo ? buildCollectionLogoUrl(col.id) : null;
+            const designer = col.designedBy && col.designedBy.name;
+
+            return `
+                <div class="collection-mini" data-id="${escapeHtml(col.id)}" tabindex="0" role="button" aria-label="Открыть ${escapeHtml(col.title)}">
+                    ${col.hasCustomDiamond ? '<span class="diamond-mark" title="Кастомный Diamond">💎</span>' : ''}
+                    <div class="collection-mini-logo">
+                        ${logoUrl
+                            ? `<img src="${logoUrl}" alt="${escapeHtml(col.title)}" loading="lazy" onerror="this.parentNode.innerHTML='<span class=\\'placeholder\\'>🎴</span>'">`
+                            : '<span class="placeholder">🎴</span>'
+                        }
+                    </div>
+                    <div class="collection-mini-title" title="${escapeHtml(col.title)}">${escapeHtml(col.title)}</div>
+                    <div class="collection-mini-meta">
+                        <span>🎴 ${col.size}</span>
+                        <span class="collection-mini-status" style="background:${statusInfo.bg}; color:${statusInfo.color};">
+                            ${statusInfo.emoji} ${escapeHtml(statusInfo.label)}
+                        </span>
+                    </div>
+                    ${designer ? `
+                        <div class="collection-mini-designer" title="Дизайн: ${escapeHtml(designer)}">
+                            ${col.designedBy.image ? `<img src="${escapeHtml(col.designedBy.image)}" alt="">` : '<i class="bi bi-brush"></i>'}
+                            <span>${escapeHtml(designer)}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }).join('');
+
+        gridEl.querySelectorAll('.collection-mini').forEach(card => {
+            const open = () => {
+                lastFocusedCard = card;
+                openModal(card.dataset.id);
+            };
+            card.addEventListener('click', open);
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    open();
+                }
+            });
+        });
+    }
+
+    // ---------- Модалка ----------
+    function openModal(collectionId) {
+        const col = collectionsList.find(c => c.id === collectionId);
+        if (!col) return;
+
+        const statusInfo = getCollectionStatusInfo(col.status);
+        const typeInfo = getCollectionTypeInfo(col.type);
+        const availableTotal = Math.max(0, col.supply - col.used);
+        const burnedPercent = col.supply > 0 ? ((col.burned / col.supply) * 100).toFixed(1) : '0.0';
+        const logoUrl = col.hasLogo ? buildCollectionLogoUrl(col.id) : null;
+
+        // Шапка
+        modalTitle.textContent = `${col.hasCustomDiamond ? '💎 ' : ''}${col.title}`;
+        modalLogo.innerHTML = logoUrl
+            ? `<img src="${logoUrl}" alt="" onerror="this.parentNode.innerHTML='<span style=\\'font-size:1.6rem;opacity:0.4\\'>🎴</span>'">`
+            : '<span style="font-size:1.6rem;opacity:0.4;">🎴</span>';
+
+        if (col.designedBy && col.designedBy.name) {
+            modalDesigner.style.display = 'flex';
+            modalDesigner.innerHTML = `
+                ${col.designedBy.image ? `<img src="${escapeHtml(col.designedBy.image)}" alt="">` : '<i class="bi bi-brush"></i>'}
+                <span>Дизайн: <strong>${escapeHtml(col.designedBy.name)}</strong></span>
+            `;
+        } else {
+            modalDesigner.style.display = 'none';
+            modalDesigner.innerHTML = '';
+        }
+
+        // Тело
+        let html = `
+            <div class="modal-pills">
+                <span class="badge-type" style="background:${typeInfo.bg}; color:${typeInfo.color};">
+                    ${typeInfo.emoji} ${escapeHtml(typeInfo.label)}
+                </span>
+                <span class="badge-type" style="background:${statusInfo.bg}; color:${statusInfo.color};">
+                    ${statusInfo.emoji} ${escapeHtml(statusInfo.label)}
+                </span>
+                <span class="stat-pill">🎴 Размер: <strong>${col.size}</strong></span>
+                <span class="stat-pill">📦 Тираж: <strong>${col.supply.toLocaleString()}</strong></span>
+                <span class="stat-pill">✨ Доступно: <strong>${availableTotal.toLocaleString()}</strong></span>
+                <span class="stat-pill">🔥 Сожжено: <strong>${col.burned.toLocaleString()}</strong> (${burnedPercent}%)</span>
+                <span class="stat-pill">📅 Релиз: <strong>${col.releasedAt ? new Date(col.releasedAt).toLocaleDateString('ru-RU') : '—'}</strong></span>
+            </div>
+            <div class="modal-section-title">
+                <i class="bi bi-images"></i> Карточки коллекции
+                <span style="margin-left:auto; font-weight:600; font-size:0.85rem; color:var(--text-muted);">🃏 Всего: ${col.size}</span>
+            </div>
+            <div class="grid-3cols">
+        `;
+
+        for (let i = 1; i <= col.size; i++) {
+            const url = buildCollectionChipUrl(col.id, i);
+            html += `
+                <div class="modal-chip-card">
+                    <div class="modal-chip-image">
+                        <img src="${url}" loading="lazy" alt="Фишка #${i}"
+                            onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22180%22%20height%3D%22180%22%20viewBox%3D%220%200%20180%20180%22%3E%3Crect%20width%3D%22180%22%20height%3D%22180%22%20fill%3D%22%231a2639%22%2F%3E%3Ctext%20x%3D%2290%22%20y%3D%22100%22%20font-size%3D%2214%22%20text-anchor%3D%22middle%22%20fill%3D%22%235f6d80%22%3E%E2%9D%8C%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                    </div>
+                    <div class="modal-chip-number">#${i}</div>
+                </div>
+            `;
+        }
+
+        html += `</div>`;
+        modalBody.innerHTML = html;
+
+        // Открываем
+        modalEl.classList.add('open');
+        document.body.classList.add('modal-open');
+        modalBody.scrollTop = 0;
+    }
+
+    function closeModal() {
+        modalEl.classList.remove('open');
+        document.body.classList.remove('modal-open');
+        if (lastFocusedCard) {
+            lastFocusedCard.focus();
+            lastFocusedCard = null;
+        }
+    }
+
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    modalEl.addEventListener('click', (e) => {
+        if (e.target === modalEl) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalEl.classList.contains('open')) closeModal();
+    });
+
+    // ---------- Инициализация ----------
+    async function init() {
+        collectionsList = await fetchCollectionsList();
+
+        if (!collectionsList.length) {
+            document.getElementById('collectionTabs').innerHTML =
+                '<div style="padding:1rem;color:var(--danger);">❌ Не удалось загрузить коллекции</div>';
+            return;
+        }
+
+        currentType = TYPE_ORDER.find(t => collectionsList.some(c => c.type === t)) || collectionsList[0].type;
+
+        renderTabs();
+        renderMiniGrid();
+    }
+
+    init();
+})();
+</script>
+</body>
+</html>
