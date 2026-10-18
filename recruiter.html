@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Caps Recruiter Pro — Оценка коллекционера</title>
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
     <!-- Open Graph -->
@@ -170,38 +169,6 @@
             gap: 12px;
             margin-bottom: 1.4rem;
         }
-        .metric-tile {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 14px 12px;
-            text-align: center;
-            transition: 0.2s;
-        }
-        .metric-tile:hover {
-            border-color: rgba(255,205,0,0.35);
-            background: rgba(255,205,0,0.04);
-        }
-        .metric-tile .icon {
-            font-size: 1.4rem;
-            margin-bottom: 6px;
-            display: block;
-        }
-        .metric-tile .value {
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: var(--accent);
-            line-height: 1.1;
-            word-break: break-word;
-        }
-        .metric-tile .label {
-            font-size: 0.68rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            font-weight: 600;
-            margin-top: 4px;
-        }
 
         @media (max-width: 900px) {
             .metrics-grid { grid-template-columns: repeat(3, 1fr); }
@@ -210,30 +177,6 @@
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* ===== Секция ===== */
-        .section-block {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 1rem 1.2rem;
-            margin-bottom: 1rem;
-        }
-        .section-block:last-child {
-            margin-bottom: 0;
-        }
-        .section-title {
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-left: 4px solid var(--accent);
-            padding-left: 12px;
-            margin-bottom: 0.9rem;
-        }
-
-        /* ===== Редкости ===== */
         .grades-list {
             display: flex;
             flex-wrap: wrap;
@@ -281,8 +224,6 @@
             margin-top: 10px;
             font-size: 0.82rem;
         }
-        .streak-win { color: #4ade80; font-weight: 600; }
-        .streak-lose { color: #ff6b66; font-weight: 600; }
 
         /* ===== Боссы ===== */
         .bosses-grid {
@@ -398,34 +339,11 @@
             border: 1px solid rgba(255,205,0,0.25);
         }
 
-        /* ===== Пустое/ошибка ===== */
-        .recruiter-empty, .recruiter-error {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--border-radius);
-            padding: 3rem 1.5rem;
-            text-align: center;
-            color: var(--text-muted);
-            box-shadow: var(--shadow);
-        }
-        .recruiter-error {
-            border-color: rgba(255, 71, 64, 0.3);
-            color: var(--danger);
-        }
-        .recruiter-empty i, .recruiter-error i {
-            font-size: 2.5rem;
-            display: block;
-            margin-bottom: 1rem;
-            color: var(--text-dim);
-        }
-        .recruiter-error i { color: var(--danger); }
-
         @media (max-width: 640px) {
             .candidate-header { padding: 1.1rem 1.2rem; }
             .candidate-avatar { width: 56px; height: 56px; border-width: 2px; }
             .candidate-name { font-size: 1.15rem; }
             .candidate-body { padding: 1rem; }
-            .section-block { padding: 0.85rem 0.95rem; }
         }
     </style>
 </head>
@@ -497,6 +415,7 @@
         getFieldValue,
         getSortedGrades,
         getGradeClass,
+        formatNumberShort
     } = window.CapsTools;
 
     // Боссы — эмодзи и человекочитаемое имя
@@ -541,7 +460,7 @@
             if (!key.startsWith('caps_coins_balance')) continue;
             let suffix = key.replace(/^caps_coins_balance_?/, '');
             if (!suffix) continue;
-            if (suffix.endsWith('_prize')) continue; // награды, не ивенты
+            if (suffix.endsWith('_prize')) continue;
             const label = humanizeEvent(suffix);
             if (label) found.add(label);
         }
@@ -559,13 +478,6 @@
         return sources.size;
     }
 
-    function formatNumberShort(n) {
-        if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
-        if (n >= 10_000) return (n / 1000).toFixed(1) + 'k';
-        return n.toLocaleString('ru-RU');
-    }
-
-    // ===== Рендер =====
     function renderProfile(data) {
         const fields = data.fields || {};
 
@@ -677,7 +589,6 @@
                 };
             })
             .filter(b => b.level > 0)
-            // известные — в фиксированном порядке, новые — в конце
             .sort((a, b) => {
                 const order = ['lich', 'shaokahn', 'shredder', 'velvet'];
                 const ai = order.indexOf(a.key);
@@ -733,30 +644,30 @@
             <div class="candidate-body">
                 <!-- 5 ключевых плиток -->
                 <div class="metrics-grid">
-                    <div class="metric-tile">
-                        <span class="icon">🏆</span>
-                        <div class="value">${escapeHtml(league)}</div>
-                        <div class="label">Лига</div>
+                    <div class="stat-tile">
+                        <span class="tile-icon">🏆</span>
+                        <div class="tile-value">${escapeHtml(league)}</div>
+                        <div class="tile-label">Лига</div>
                     </div>
-                    <div class="metric-tile">
-                        <span class="icon">💎</span>
-                        <div class="value">${gradeStats.DIAMOND}</div>
-                        <div class="label">Diamond</div>
+                    <div class="stat-tile">
+                        <span class="tile-icon">💎</span>
+                        <div class="tile-value">${gradeStats.DIAMOND}</div>
+                        <div class="tile-label">Diamond</div>
                     </div>
-                    <div class="metric-tile">
-                        <span class="icon">⚡</span>
-                        <div class="value">${stakingSpeed.toFixed(2)}</div>
-                        <div class="label">Фарм/час</div>
+                    <div class="stat-tile">
+                        <span class="tile-icon">⚡</span>
+                        <div class="tile-value">${stakingSpeed.toFixed(2)}</div>
+                        <div class="tile-label">Фарм/час</div>
                     </div>
-                    <div class="metric-tile">
-                        <span class="icon">🐷</span>
-                        <div class="value">${piggyLevel}</div>
-                        <div class="label">Копилка</div>
+                    <div class="stat-tile">
+                        <span class="tile-icon">🐷</span>
+                        <div class="tile-value">${piggyLevel}</div>
+                        <div class="tile-label">Копилка</div>
                     </div>
-                    <div class="metric-tile">
-                        <span class="icon">🎴</span>
-                        <div class="value">${formatNumberShort(totalChipsCount)}</div>
-                        <div class="label">Всего фишек</div>
+                    <div class="stat-tile">
+                        <span class="tile-icon">🎴</span>
+                        <div class="tile-value">${formatNumberShort(totalChipsCount)}</div>
+                        <div class="tile-label">Всего фишек</div>
                     </div>
                 </div>
 
@@ -880,7 +791,7 @@
 
         if (!tgId || isNaN(tgId)) {
             contentDiv.innerHTML = `
-                <div class="recruiter-error">
+                <div class="error-state">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     <strong>Введите корректный числовой ID</strong>
                 </div>
@@ -909,7 +820,7 @@
             window.history.replaceState({ tgId }, '', newUrl);
         } catch (err) {
             contentDiv.innerHTML = `
-                <div class="recruiter-error">
+                <div class="error-state">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     <strong>Ошибка:</strong> ${escapeHtml(err.message)}<br>
                     <small style="color:var(--text-muted);">Проверьте ID, интернет, возможно требуется CORS</small>

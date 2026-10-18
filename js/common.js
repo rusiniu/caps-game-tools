@@ -1,6 +1,5 @@
 // js/common.js - общие функции для всех инструментов Caps Game
 
-// Базовые URL API
 const CONFIG = {
     NANO: 1e9,
     FIRESTORE_QUERY: "https://firestore.googleapis.com/v1/projects/capsgame-prod/databases/(default)/documents:runQuery",
@@ -10,33 +9,109 @@ const CONFIG = {
     USERS_API: (tgId) => `https://firestore.googleapis.com/v1/projects/capsgame-prod/databases/(default)/documents/Users/${tgId}`,
     SQUADS_INFO_API: (squadId) => `https://firestore.googleapis.com/v1/projects/capsgame-prod/databases/(default)/documents/SquadsV2/${squadId}`,
     SQUADS_REQUESTS_API: (squadId) => `https://firestore.googleapis.com/v1/projects/capsgame-prod/databases/(default)/documents/SquadsV2/${squadId}/Requests`,
+    CAPS_GD_V1: "https://firestore.googleapis.com/v1/projects/capsgame-prod/databases/(default)/documents/CapsGD/v1",
+    CAPS_GD_V1_MASK: (fields) => {
+        const mask = fields.map(f => `mask.fieldPaths=${encodeURIComponent(f)}`).join('&');
+        return `https://firestore.googleapis.com/v1/projects/capsgame-prod/databases/(default)/documents/CapsGD/v1?${mask}`;
+    },
     SQUAD_ID: '-1002917473074',
     PAGE_SIZE: 50,
     GRADE_ORDER: ['COMMON', 'COMMON_PLUS', 'RARE', 'RARE_PLUS', 'EPIC', 'EPIC_PLUS', 'LEGEND', 'LEGEND_PLUS', 'DIAMOND'],
 };
 
-// Безопасное получение значения из Firestore fields
-function getFieldValue(fields, fieldName, defaultValue = null) {
-    if (!fields || !fields[fieldName]) return defaultValue;
-    const field = fields[fieldName];
-    if (field.stringValue !== undefined) return field.stringValue;
-    if (field.integerValue !== undefined) return parseInt(field.integerValue);
-    if (field.doubleValue !== undefined) return parseFloat(field.doubleValue);
-    if (field.booleanValue !== undefined) return field.booleanValue;
-    if (field.timestampValue !== undefined) return field.timestampValue;
-    if (field.mapValue?.fields) return field.mapValue.fields;
-    if (field.arrayValue?.values) return field.arrayValue.values;
+// ============= FIRESTORE-ХЕЛПЕРЫ =============
+
+async function firestoreGet(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+        if (response.status === 404) throw new Error('Документ не найден (404)');
+        throw new Error(`Ошибка API: ${response.status} ${response.statusText}`);
+    }
+    return response.json();
+}
+
+async function firestoreQuery(body) {
+    const response = await fetch(CONFIG.FIRESTORE_QUERY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+        throw new Error(`Ошибка API: ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+    if (!Array.isArray(data)) {
+        throw new Error('Неверный формат ответа от сервера');
+    }
+    return data;
+}
+
+async function fetchGameConfig(maskFields = []) {
+    const cacheKey = `capsgd:${maskFields.slice().sort().join(',')}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) return cached;
+
+    const url = maskFields.length > 0
+        ? CONFIG.CAPS_GD_V1_MASK(maskFields)
+        : CONFIG.CAPS_GD_V1;
+
+    const doc = await firestoreGet(url);
+    cacheSet(cacheKey, doc);
+    return doc;
+}
+
+// ============= ПАРСЕРЫ FIRESTORE-ТИПОВ =============
+
+function parseFirestoreValue(val, defaultValue = null) {
+    if (!val) return defaultValue;
+    if (val.integerValue !== undefined) return parseInt(val.integerValue);
+    if (val.doubleValue !== undefined) return parseFloat(val.doubleValue);
+    if (val.stringValue !== undefined) return val.stringValue;
+    if (val.booleanValue !== undefined) return val.booleanValue;
+    if (val.timestampValue !== undefined) return val.timestampValue;
+    if (val.nullValue !== undefined) return null;
+    if (val.mapValue !== undefined) return val.mapValue.fields || {};
+    if (val.arrayValue !== undefined) return val.arrayValue.values || [];
     return defaultValue;
 }
 
-// Безопасное приведение к числу
+function parseFirestoreMap(mapVal) {
+    return mapVal?.mapValue?.fields || {};
+}
+
+function parseFirestoreArray(arrayVal) {
+    return arrayVal?.arrayValue?.values || [];
+}
+
+function parseFirestoreNumber(val, defaultValue = null) {
+    if (!val) return defaultValue;
+    if (val.integerValue !== undefined) return parseInt(val.integerValue);
+    if (val.doubleValue !== undefined) return parseFloat(val.doubleValue);
+    return defaultValue;
+}
+
+function isFirestoreScalar(val) {
+    return val && (
+        val.integerValue !== undefined ||
+        val.doubleValue !== undefined ||
+        val.stringValue !== undefined ||
+        val.booleanValue !== undefined
+    );
+}
+
+function getFieldValue(fields, fieldName, defaultValue = null) {
+    if (!fields || !fields[fieldName]) return defaultValue;
+    return parseFirestoreValue(fields[fieldName], defaultValue);
+}
+
 function safeNumber(value, defaultValue = 0) {
     if (value === undefined || value === null) return defaultValue;
     const num = Number(value);
     return isNaN(num) ? defaultValue : num;
 }
 
-// Экранирование HTML
+// ============= УТИЛИТЫ =============
+
 function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>]/g, function(m) {
@@ -47,12 +122,16 @@ function escapeHtml(str) {
     });
 }
 
-// Форматирование чисел с разделителями
 function formatNumber(num) {
     return num?.toLocaleString() || '0';
 }
 
-// Форматирование времени
+function formatNumberShort(n) {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
+    if (n >= 10_000) return (n / 1000).toFixed(1) + 'k';
+    return n.toLocaleString('ru-RU');
+}
+
 function formatTime(timestampValue) {
     if (!timestampValue) return '—';
     const date = new Date(timestampValue);
@@ -60,8 +139,29 @@ function formatTime(timestampValue) {
     return date.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
+// ============= КЭШ =============
 
-// Человекочитаемые метки типов коллекций (для табов)
+function cacheGet(key) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.t > CONFIG.CACHE_TTL_MS) {
+            localStorage.removeItem(key);
+            return null;
+        }
+        return parsed.v;
+    } catch { return null; }
+}
+
+function cacheSet(key, value) {
+    try {
+        localStorage.setItem(key, JSON.stringify({ t: Date.now(), v: value }));
+    } catch {}
+}
+
+// ============= КОЛЛЕКЦИИ =============
+
 const COLLECTION_TYPES = {
     common:    { label: 'Common',    emoji: '📀', color: '#94a3b8', bg: '#e2e8f0' },
     special:   { label: 'Special',   emoji: '✨', color: '#16a34a', bg: '#dcfce7' },
@@ -74,7 +174,6 @@ function getCollectionTypeInfo(type) {
     return COLLECTION_TYPES[type] || { label: type || 'Other', emoji: '🎴', color: '#64748b', bg: '#e2e8f0' };
 }
 
-// Информация о статусе коллекции (не фишки)
 function getCollectionStatusInfo(status) {
     const map = {
         'available':     { emoji: '✅', label: 'Доступна',  color: '#16a34a', bg: '#dcfce7' },
@@ -84,26 +183,19 @@ function getCollectionStatusInfo(status) {
     return map[status] || { emoji: '❓', label: status || '—', color: '#64748b', bg: '#e2e8f0' };
 }
 
-// URL логотипа коллекции
 function buildCollectionLogoUrl(collectionId) {
     const path = `collections/${collectionId}/logo.png`;
     return `${CONFIG.STORAGE_BASE}${encodeURIComponent(path)}?alt=media`;
 }
 
-// URL картинки фишки коллекции
 function buildCollectionChipUrl(collectionId, number) {
     const path = `collections/${collectionId}/${number}.png`;
     return `${CONFIG.STORAGE_BASE}${encodeURIComponent(path)}?alt=media`;
 }
 
-
-// Загрузка списка коллекций (с группировкой по типам)
 async function fetchCollectionsList() {
     try {
-        const response = await fetch(CONFIG.COLLECTIONS_API);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-
+        const data = await firestoreGet(CONFIG.COLLECTIONS_API);
         if (!data.fields?.collections?.arrayValue?.values) return [];
 
         const list = data.fields.collections.arrayValue.values
@@ -146,7 +238,6 @@ async function fetchCollectionsList() {
             })
             .filter(Boolean);
 
-        // Группируем по типу, внутри — по order
         const byType = {};
         for (const c of list) {
             (byType[c.type] ||= []).push(c);
@@ -155,7 +246,6 @@ async function fetchCollectionsList() {
             byType[t].sort((a, b) => a.order - b.order);
         }
 
-        // Плоский список в порядке типов игры
         const TYPE_ORDER = ['common', 'special', 'event', 'community', 'premium'];
         const flat = [];
         for (const t of TYPE_ORDER) {
@@ -172,31 +262,8 @@ async function fetchCollectionsList() {
     }
 }
 
-// ============= КЭШ =============
+// ============= RECRUITER =============
 
-function cacheGet(key) {
-    try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        if (Date.now() - parsed.t > CONFIG.CACHE_TTL_MS) {
-            localStorage.removeItem(key);
-            return null;
-        }
-        return parsed.v;
-    } catch { return null; }
-}
-
-function cacheSet(key, value) {
-    try {
-        localStorage.setItem(key, JSON.stringify({ t: Date.now(), v: value }));
-    } catch {}
-}
-
-
-// ============= ФУНКЦИИ ДЛЯ RECRUITER =============
-
-// Построить URL изображения
 function buildImageUrl(path) {
     if (!path) return null;
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
@@ -204,7 +271,6 @@ function buildImageUrl(path) {
     return `${CONFIG.STORAGE_BASE}${encodedPath}?alt=media`;
 }
 
-// Загрузка профиля игрока
 async function fetchPlayerProfile(tgId) {
     const apiUrl = CONFIG.USERS_API(tgId);
     const response = await fetch(apiUrl);
@@ -217,13 +283,11 @@ async function fetchPlayerProfile(tgId) {
     return data;
 }
 
-// Получить параметр из URL
 function getUrlParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param);
 }
 
-// Получить отсортированные редкости
 function getSortedGrades(gradeStats) {
     const result = [];
     for (const grade of CONFIG.GRADE_ORDER) {
@@ -234,7 +298,6 @@ function getSortedGrades(gradeStats) {
     return result;
 }
 
-// Классы для редкостей
 function getGradeClass(grade) {
     const classes = {
         'COMMON': 'grade-common',
@@ -250,9 +313,8 @@ function getGradeClass(grade) {
     return classes[grade] || 'grade-common';
 }
 
-// ============= ФУНКЦИИ ДЛЯ SQUAD-REQUESTS =============
+// ============= SQUADS =============
 
-// Загрузка информации о дворе
 async function fetchSquadInfo(squadId) {
     const url = CONFIG.SQUADS_INFO_API(squadId);
     try {
@@ -264,7 +326,6 @@ async function fetchSquadInfo(squadId) {
     }
 }
 
-// Загрузка страницы заявок
 async function fetchRequestsPage(squadId, pageToken = null) {
     let url = `${CONFIG.SQUADS_REQUESTS_API(squadId)}?pageSize=${CONFIG.PAGE_SIZE}`;
     if (pageToken) {
@@ -306,7 +367,6 @@ async function fetchRequestsPage(squadId, pageToken = null) {
     }
 }
 
-// Загрузка всех заявок (с пагинацией)
 async function fetchAllRequests(squadId) {
     let all = [];
     let pageToken = null;
@@ -322,9 +382,8 @@ async function fetchAllRequests(squadId) {
     return all;
 }
 
-// ============= ФУНКЦИИ ДЛЯ FINDER =============
+// ============= FINDER =============
 
-// Маппинг статусов фишек
 const STATUS_MAP = {
     'SALE': { emoji: '💰', label: 'На продаже', color: '#22c55e' },
     'READY': { emoji: '✅', label: 'Готова', color: '#fbbf24' },
@@ -336,30 +395,33 @@ const STATUS_MAP = {
     'NFT_EDITING': { emoji: '✏️', label: 'Редактирование NFT', color: '#f59e0b' }
 };
 
-// Маппинг редкостей
+// Цвета по мотивам игры (плоские). gradient — опционально для мест, где можно применить background.
 const GRADE_MAP = {
-    'COMMON': { label: 'Common', color: '#94a3b8' },
-    'COMMON_PLUS': { label: 'Common+', color: '#94a3b8' },
-    'RARE': { label: 'Rare', color: '#22c55e' },
-    'RARE_PLUS': { label: 'Rare+', color: '#22c55e' },
-    'EPIC': { label: 'Epic', color: '#3b82f6' },
-    'EPIC_PLUS': { label: 'Epic+', color: '#3b82f6' },
-    'LEGEND': { label: 'Legend', color: '#f59e0b' },
-    'LEGEND_PLUS': { label: 'Legend+', color: '#f59e0b' },
-    'DIAMOND': { label: 'Diamond', color: '#06b6d4' }
+    'COMMON':      { label: 'Common',   color: '#94a3b8', gradient: null },
+    'COMMON_PLUS': { label: 'Common+',  color: '#94a3b8', gradient: null },
+    'RARE':        { label: 'Rare',     color: '#2c53db', gradient: null },
+    'RARE_PLUS':   { label: 'Rare+',    color: '#2c53db', gradient: null },
+    'EPIC':        { label: 'Epic',     color: '#8b1fbc', gradient: 'linear-gradient(360deg,#6811c4 0%,#b526a4 100%)' },
+    'EPIC_PLUS':   { label: 'Epic+',    color: '#8b1fbc', gradient: 'linear-gradient(360deg,#6811c4 0%,#b526a4 100%)' },
+    'LEGEND':      { label: 'Legend',   color: '#f0b428', gradient: 'linear-gradient(174deg,#eec51f,#dc8f3d,#ff9936,#f6cc1f)' },
+    'LEGEND_PLUS': { label: 'Legend+',  color: '#f0b428', gradient: 'linear-gradient(174deg,#eec51f,#dc8f3d,#ff9936,#f6cc1f)' },
+    'DIAMOND':     { label: 'Diamond',  color: '#7a8aff', gradient: 'linear-gradient(#527fff 50%,#9d95ff 100%)' }
 };
 
-// Получить информацию о статусе
 function getStatusInfo(status) {
     return STATUS_MAP[status] || { emoji: '❓', label: status || 'Неизвестно', color: '#6b7280' };
 }
 
-// Получить информацию о редкости
 function getGradeInfo(grade) {
-    return GRADE_MAP[grade] || { label: grade || 'Unknown', color: '#6b7280' };
+    return GRADE_MAP[grade] || { label: grade || 'Unknown', color: '#6b7280', gradient: null };
 }
 
-// Поиск фишек по номеру
+// Возвращает background-значение: gradient если есть, иначе плоский цвет.
+function getGradeBg(grade) {
+    const info = getGradeInfo(grade);
+    return info.gradient || info.color;
+}
+
 async function searchCapsByNumber(number) {
     const query = {
         structuredQuery: {
@@ -374,34 +436,16 @@ async function searchCapsByNumber(number) {
             limit: 200
         }
     };
-
-    const response = await fetch(CONFIG.FIRESTORE_QUERY, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(query)
-    });
-
-    if (!response.ok) {
-        throw new Error(`Ошибка API: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    if (!Array.isArray(data)) {
-        throw new Error('Неверный формат ответа от сервера');
-    }
-    return data;
+    return firestoreQuery(query);
 }
 
-// ============= FLOOR (минимальные цены на маркете) =============
+// ============= FLOOR =============
 
-// 18 запросов параллельно: 9 редкостей × 2 валюты (ton, sol)
-// Возвращает: { COMMON: { ton: 0.1, sol: null }, ..., DIAMOND: { ton: 9.0, sol: null } }
 async function fetchCollectionFloors(collectionId) {
     const cacheKey = `floor-v4:${collectionId}`;
     const cached = cacheGet(cacheKey);
     if (cached) return cached;
 
-    // Один запрос: status=SALE + collectionId + grade + priceCurrency, orderBy price ASC, limit 1
     async function queryOne(grade, currency) {
         const query = {
             structuredQuery: {
@@ -423,15 +467,8 @@ async function fetchCollectionFloors(collectionId) {
         };
 
         try {
-            const response = await fetch(CONFIG.FIRESTORE_QUERY, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(query)
-            });
-            if (!response.ok) return null;
-
-            const data = await response.json();
-            if (!Array.isArray(data) || data.length === 0 || !data[0].document) return null;
+            const data = await firestoreQuery(query);
+            if (data.length === 0 || !data[0].document) return null;
 
             const f = data[0].document.fields || {};
             const raw = f.price?.integerValue !== undefined
@@ -445,7 +482,6 @@ async function fetchCollectionFloors(collectionId) {
         }
     }
 
-    // 18 запросов: 9 редкостей × 2 валюты
     const tasks = [];
     for (const grade of CONFIG.GRADE_ORDER) {
         tasks.push(queryOne(grade, 'ton').then(v => ({ grade, currency: 'ton', price: v })));
@@ -468,32 +504,24 @@ async function fetchCollectionFloors(collectionId) {
     return byGrade;
 }
 
-// Только Diamond (в TON). Возвращает число или null.
 async function fetchDiamondFloor(collectionId) {
     const floors = await fetchCollectionFloors(collectionId);
     return floors?.DIAMOND?.ton ?? null;
 }
 
-// ============= АКТИВНЫЙ СНАПШОТ СКОРОСТЕЙ =============
+// ============= STAKING =============
 
-// Возвращает { name: "snapshot-1", data: { collectionId: { diamond: 0.99, ... } } }
 async function fetchActiveStakingSpeeds() {
     const cacheKey = 'staking:speeds';
     const cached = cacheGet(cacheKey);
     if (cached) return cached;
 
-    const url = "https://firestore.googleapis.com/v1/projects/capsgame-prod/databases/(default)/documents/CapsGD/v1?mask.fieldPaths=staking";
-
     try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const doc = await response.json();
-
+        const doc = await fetchGameConfig(['staking']);
         const staking = doc.fields?.staking?.mapValue?.fields || {};
         const speeds = staking.speeds?.mapValue?.fields || {};
         const configs = staking.configs?.arrayValue?.values || [];
 
-        // Активный конфиг — самый свежий по from
         const sortedConfigs = configs
             .map(c => c.mapValue.fields)
             .filter(f => f.from?.timestampValue)
@@ -530,32 +558,50 @@ async function fetchActiveStakingSpeeds() {
     }
 }
 
+// ============= ПРОЧЕЕ =============
 
-// Показать уведомление (тост)
 function showToast(message, type = 'info') {
     console.log(`[${type}] ${message}`);
-    // Можно добавить визуальный тост позже
 }
 
-// Экспортируем в глобальный объект
+// ============= ЭКСПОРТ =============
+
 window.CapsTools = {
     CONFIG,
+    // Firestore
+    firestoreGet,
+    firestoreQuery,
+    fetchGameConfig,
+    // Парсеры
+    parseFirestoreValue,
+    parseFirestoreMap,
+    parseFirestoreArray,
+    parseFirestoreNumber,
+    isFirestoreScalar,
     getFieldValue,
     safeNumber,
+    // Утилиты
     escapeHtml,
     formatNumber,
+    formatNumberShort,
     formatTime,
+    // Коллекции
     fetchCollectionsList,
+    // Recruiter
     fetchPlayerProfile,
-    fetchSquadInfo,
-    fetchRequestsPage,
-    fetchAllRequests,
-    buildImageUrl,
     getUrlParam,
     getSortedGrades,
     getGradeClass,
+    // Squads
+    fetchSquadInfo,
+    fetchRequestsPage,
+    fetchAllRequests,
+    // Общее
+    buildImageUrl,
+    // Finder
     getStatusInfo,
     getGradeInfo,
+    getGradeBg,
     searchCapsByNumber,
     showToast,
     STATUS_MAP,
@@ -565,9 +611,12 @@ window.CapsTools = {
     getCollectionStatusInfo,
     buildCollectionLogoUrl,
     buildCollectionChipUrl,
+    // Кэш
     cacheGet,
     cacheSet,
+    // Market
     fetchCollectionFloors,
     fetchDiamondFloor,
+    // Staking
     fetchActiveStakingSpeeds,
 };

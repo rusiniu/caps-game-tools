@@ -2,7 +2,6 @@
 /* Тёмная тема, Inter, единый стиль в духе игры */
 
 :root {
-    /* Базовые цвета — тёмная гамма */
     --bg-page: #0f1419;
     --bg-elevated: #1a2027;
     --bg-card: #1e2228;
@@ -10,21 +9,17 @@
     --bg-header: #1a2639;
     --bg-header-2: #0f172a;
 
-    /* Текст */
     --text: #e8edf2;
     --text-muted: #8a99ad;
     --text-dim: #5f6d80;
 
-    /* Границы и разделители */
     --border: rgba(255, 255, 255, 0.08);
     --border-strong: rgba(255, 255, 255, 0.14);
 
-    /* Акценты */
     --accent: #ffcd00;
     --accent-dark: #e6b800;
     --accent-soft: rgba(255, 205, 0, 0.14);
 
-    /* Статусы (приглушённые) */
     --success: #4ade80;
     --success-bg: rgba(51, 189, 28, 0.15);
     --danger: #ff6b66;
@@ -34,7 +29,6 @@
     --info: #60a5fa;
     --info-bg: rgba(84, 129, 255, 0.15);
 
-    /* Типы коллекций (по мотивам игры) */
     --type-common-bg: rgba(148, 163, 184, 0.16);
     --type-common-fg: #cbd5e1;
     --type-special-bg: rgba(51, 189, 28, 0.16);
@@ -46,11 +40,9 @@
     --type-premium-bg: rgba(255, 205, 0, 0.16);
     --type-premium-fg: #ffcd00;
 
-    /* Формы */
     --border-radius: 1.75rem;
     --border-radius-sm: 1rem;
 
-    /* Тени */
     --shadow: 0 12px 24px -12px rgba(0, 0, 0, 0.5);
     --shadow-hover: 0 24px 32px -18px rgba(0, 0, 0, 0.7);
     --shadow-modal: 0 30px 60px -20px rgba(0, 0, 0, 0.8);
@@ -77,14 +69,13 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Общая обёртка */
 .app-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 28px 24px;
 }
 
-/* Шапка сайта (навигация) */
+/* ===== Шапка сайта ===== */
 .site-header {
     background: linear-gradient(135deg, var(--bg-header) 0%, var(--bg-header-2) 100%);
     border-radius: var(--border-radius);
@@ -147,7 +138,7 @@ body {
     color: #0f1419;
 }
 
-/* Карточки */
+/* ===== Карточки ===== */
 .card-modern {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -171,7 +162,7 @@ body {
     border-bottom: 3px solid var(--accent);
 }
 
-/* Бейджи */
+/* ===== Бейджи типов коллекций ===== */
 .badge-type {
     display: inline-block;
     padding: 5px 18px;
@@ -225,7 +216,7 @@ body {
     font-weight: 700;
 }
 
-/* Кнопки */
+/* ===== Кнопки ===== */
 .btn-primary-custom {
     background: var(--info);
     color: white;
@@ -290,7 +281,7 @@ body {
     color: #0f1419;
 }
 
-/* Селекты и формы */
+/* ===== Селекты и формы ===== */
 .select-modern, .input-modern {
     width: 100%;
     padding: 12px 18px;
@@ -314,7 +305,7 @@ body {
     color: var(--text);
 }
 
-/* Скелетон загрузки */
+/* ===== Скелетон ===== */
 .skeleton {
     background: linear-gradient(90deg, #232830 25%, #2c333c 50%, #232830 75%);
     background-size: 200% 100%;
@@ -327,7 +318,6 @@ body {
     100% { background-position: -200% 0; }
 }
 
-/* Анимации */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -337,7 +327,7 @@ body {
     animation: fadeIn 0.3s ease-out;
 }
 
-/* Сетка галереи (3 колонки) */
+/* ===== Сетки ===== */
 .grid-3cols {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -353,7 +343,6 @@ body {
     .grid-3cols { grid-template-columns: 1fr; }
 }
 
-/* Футер */
 .site-footer {
     margin-top: 3rem;
     text-align: center;
@@ -363,17 +352,287 @@ body {
     padding-top: 1.8rem;
 }
 
-/* Утилиты */
 .text-accent { color: var(--accent); }
 .bg-accent { background: var(--accent); }
 
-/* Адаптивные таблицы */
-.table-responsive-custom {
-    overflow-x: auto;
+.table-responsive-custom { overflow-x: auto; }
+
+/* ========================================================= */
+/* ===== РЕДКОСТИ (цвета по мотивам игры, плоские) ========= */
+/* ========================================================= */
+.grade-common      { background-color: #475569; color: #f1f5f9; font-weight: 600; }
+.grade-common-plus { background-color: #334155; color: #e2e8f0; font-weight: 600; }
+.grade-rare        { background-color: rgba(44, 83, 219, 0.22);  color: #7d9cff; font-weight: 600; }
+.grade-rare-plus   { background-color: rgba(44, 83, 219, 0.34);  color: #a9bdff; font-weight: 600; }
+.grade-epic        { background-color: rgba(139, 31, 188, 0.22); color: #cf8dff; font-weight: 600; }
+.grade-epic-plus   { background-color: rgba(139, 31, 188, 0.34); color: #e0b3ff; font-weight: 600; }
+.grade-legend      { background-color: rgba(240, 180, 40, 0.22); color: #ffd24d; font-weight: 600; }
+.grade-legend-plus { background-color: rgba(240, 180, 40, 0.34); color: #ffe07a; font-weight: 600; }
+.grade-diamond     { background-color: rgba(122, 138, 255, 0.30); color: #c8d2ff; font-weight: 700; }
+
+/* ========================================================= */
+/* ===== ОБЩИЕ КОМПОНЕНТЫ ================================== */
+/* ========================================================= */
+
+/* ===== Табы-пилюли ===== */
+.pill-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1.5rem;
 }
 
-/* ============= СТИЛИ ДЛЯ FINDER ============= */
+.pill-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 60px;
+    border: 2px solid transparent;
+    background: var(--bg-card);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: 0.2s;
+    user-select: none;
+    box-shadow: 0 4px 10px -6px rgba(0, 0, 0, 0.4);
+}
 
+.pill-tab:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+}
+
+.pill-tab.active {
+    color: #0f1419;
+    box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.6);
+}
+
+.pill-tab .tab-count {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1px 9px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+}
+
+.pill-tab.active .tab-count {
+    background: rgba(0, 0, 0, 0.18);
+    color: #0f1419;
+}
+
+/* ===== Плитка метрики ===== */
+.stat-tile {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.1rem 1.2rem;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.stat-tile:hover {
+    border-color: rgba(255, 205, 0, 0.35);
+    background: rgba(255, 205, 0, 0.04);
+}
+
+.stat-tile .tile-icon {
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.stat-tile .tile-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1.1;
+    word-break: break-word;
+}
+
+.stat-tile .tile-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+    margin-top: 6px;
+    word-break: break-word;
+}
+
+.stat-tile.unknown .tile-icon {
+    opacity: 0.6;
+}
+
+.stat-tile.unknown .tile-label {
+    text-transform: none;
+    letter-spacing: 0;
+    font-family: 'Inter', monospace;
+}
+
+/* ===== Секция ===== */
+.section-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.section-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-left: 4px solid var(--accent);
+    padding-left: 12px;
+    margin-bottom: 0.9rem;
+}
+
+.section-subnote {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 0.8rem;
+    line-height: 1.4;
+}
+
+/* ===== Заголовок сущности ===== */
+.entity-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding-bottom: 1rem;
+    margin-bottom: 1.2rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.entity-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--bg-header) 0%, var(--bg-header-2) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 6px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+}
+
+.entity-logo img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.entity-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.entity-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+.entity-sub strong {
+    color: var(--accent);
+}
+
+/* ===== Пустое состояние / ошибка ===== */
+.empty-state,
+.error-state {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--text-muted);
+    box-shadow: var(--shadow);
+}
+
+.empty-state i,
+.error-state i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+    color: var(--text-dim);
+}
+
+.empty-state h4,
+.error-state h4 {
+    color: var(--text);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p,
+.error-state p {
+    margin: 0;
+}
+
+.error-state {
+    border-color: rgba(255, 71, 64, 0.3);
+    color: var(--danger);
+}
+
+.error-state i {
+    color: var(--danger);
+}
+
+/* ===== Кнопка обновления ===== */
+.btn-refresh {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    padding: 8px 18px;
+    border-radius: 60px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: 0.2s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-refresh:hover {
+    background: rgba(255, 205, 0, 0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* ===== Универсальный бейдж статуса ===== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 14px;
+    border-radius: 40px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.status-badge.pending  { background: var(--warning-bg); color: var(--warning); }
+.status-badge.accepted { background: var(--success-bg); color: var(--success); }
+.status-badge.rejected { background: var(--danger-bg);  color: var(--danger); }
+.status-badge.neutral  { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); }
+
+/* ========================================================= */
+/* ===== FINDER ============================================ */
+/* ========================================================= */
 .chip-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -494,18 +753,6 @@ body {
     font-weight: 500;
 }
 
-.section-title {
-    font-weight: 700;
-    font-size: 1.1rem;
-    margin-bottom: 0.9rem;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-left: 4px solid var(--accent);
-    padding-left: 12px;
-}
-
 .status-group {
     margin-bottom: 2rem;
 }
@@ -521,24 +768,9 @@ body {
     margin-bottom: 0.8rem;
 }
 
-.empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: var(--text-muted);
-}
-
-/* ============= СТИЛИ ДЛЯ RECRUITER ============= */
-
-.grade-common { background-color: #475569; color: #f1f5f9; font-weight: 600; }
-.grade-common-plus { background-color: #334155; color: #e2e8f0; font-weight: 600; }
-.grade-rare { background-color: rgba(51, 189, 28, 0.22); color: #4ade80; font-weight: 600; }
-.grade-rare-plus { background-color: rgba(51, 189, 28, 0.32); color: #86efac; font-weight: 600; }
-.grade-epic { background-color: rgba(84, 129, 255, 0.22); color: #93b4ff; font-weight: 600; }
-.grade-epic-plus { background-color: rgba(84, 129, 255, 0.32); color: #b6c9ff; font-weight: 600; }
-.grade-legend { background-color: rgba(255, 205, 0, 0.22); color: #ffcd00; font-weight: 600; }
-.grade-legend-plus { background-color: rgba(255, 205, 0, 0.32); color: #ffe14d; font-weight: 600; }
-.grade-diamond { background-color: rgba(84, 129, 255, 0.32); color: #cbd8ff; font-weight: 700; }
-
+/* ========================================================= */
+/* ===== RECRUITER ========================================= */
+/* ========================================================= */
 .avatar-frame {
     width: 70px;
     height: 70px;
@@ -599,8 +831,9 @@ body {
 .streak-win { color: #4ade80; }
 .streak-lose { color: #ff6b66; }
 
-/* ============= СТИЛИ ДЛЯ SQUAD-REQUESTS ============= */
-
+/* ========================================================= */
+/* ===== SQUAD-REQUESTS ==================================== */
+/* ========================================================= */
 .request-card {
     border: 1px solid var(--border);
     border-radius: 1.2rem;
@@ -617,37 +850,6 @@ body {
 }
 .request-card .card-body {
     padding: 1.25rem 1.5rem;
-}
-
-.pending-badge {
-    background: var(--warning-bg);
-    color: var(--warning);
-    font-weight: 700;
-    padding: 4px 16px;
-    border-radius: 40px;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-.accepted-badge {
-    background: var(--success-bg);
-    color: var(--success);
-    font-weight: 700;
-    padding: 4px 16px;
-    border-radius: 40px;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-.rejected-badge {
-    background: var(--danger-bg);
-    color: var(--danger);
-    font-weight: 700;
-    padding: 4px 16px;
-    border-radius: 40px;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
 }
 
 .avatar-mini {
@@ -741,54 +943,9 @@ body {
     color: var(--text-dim);
 }
 
-/* ============= ТАБЫ И МИНИ-КАРТОЧКИ КОЛЛЕКЦИЙ ============= */
-
-.collection-tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 1.5rem;
-}
-
-.collection-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border-radius: 60px;
-    border: 2px solid transparent;
-    background: var(--bg-card);
-    font-weight: 700;
-    font-size: 0.85rem;
-    color: var(--text);
-    cursor: pointer;
-    transition: 0.2s;
-    box-shadow: 0 4px 10px -6px rgba(0,0,0,0.4);
-    user-select: none;
-}
-
-.collection-tab:hover {
-    transform: translateY(-2px);
-    border-color: var(--border-strong);
-}
-
-.collection-tab .tab-count {
-    background: rgba(255,255,255,0.1);
-    padding: 1px 9px;
-    border-radius: 30px;
-    font-size: 0.7rem;
-}
-
-.collection-tab.active {
-    color: #0f1419;
-    box-shadow: 0 8px 18px -8px rgba(0,0,0,0.6);
-}
-.collection-tab.active .tab-count {
-    background: rgba(0,0,0,0.18);
-    color: #0f1419;
-}
-
-/* Мини-карточки коллекций */
+/* ========================================================= */
+/* ===== COLLECTIONS (мини-карточки + модалка) ============== */
+/* ========================================================= */
 .collection-mini-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -916,8 +1073,7 @@ body {
     object-fit: cover;
 }
 
-/* ============= МОДАЛКА ============= */
-
+/* ===== Модалка ===== */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -1094,7 +1250,6 @@ body {
     padding-left: 12px;
 }
 
-/* Мобильная модалка — на весь экран */
 @media (max-width: 640px) {
     .modal-overlay {
         padding: 0;
@@ -1134,9 +1289,7 @@ body {
     }
 }
 
-/* ============= СЕТКА ФИШЕК В МОДАЛКЕ ============= */
-/* В игре всегда 3 в ряд — сохраняем это и здесь */
-
+/* Сетка фишек в модалке */
 .modal-chips-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1218,14 +1371,11 @@ body {
     white-space: nowrap;
 }
 
-
-
-/* Блокировка скролла body при открытой модалке */
 body.modal-open {
     overflow: hidden;
 }
 
-/* Адаптив для Finder / общих элементов */
+/* ===== Адаптив finder / общий ===== */
 @media (max-width: 768px) {
     .chip-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

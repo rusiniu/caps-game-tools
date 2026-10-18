@@ -6,7 +6,6 @@
     <title>Caps Squad Requests — Заявки во двор</title>
     <!-- Запрет индекса -->
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
     <!-- Open Graph -->
@@ -28,16 +27,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/common.css">
     <style>
-        /* ===== Шапка двора ===== */
-        .squad-header {
-            /* уже есть в common.css, только усиливаем */
-            display: flex;
-            align-items: center;
-            gap: 1.2rem;
-            flex-wrap: wrap;
-        }
-
-        /* ===== Фильтры ===== */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
@@ -72,24 +61,6 @@
 
         .filter-bar .filter-spacer { flex: 1; }
 
-        .filter-bar .refresh-btn {
-            border-radius: 60px;
-            padding: 8px 14px;
-            border: 2px solid var(--accent);
-            background: transparent;
-            color: var(--accent);
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .filter-bar .refresh-btn:hover {
-            background: var(--accent);
-            color: #0f1419;
-        }
-
         .filter-bar .last-updated {
             font-size: 0.75rem;
             color: var(--text-dim);
@@ -97,12 +68,12 @@
 
         /* ===== Карточка заявки ===== */
         .request-card {
-            background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 1.2rem;
             padding: 1rem 1.2rem;
             margin-bottom: 0.85rem;
             transition: 0.2s;
+            background: var(--bg-card);
         }
         .request-card:hover {
             border-color: rgba(255,205,0,0.35);
@@ -114,26 +85,6 @@
             align-items: center;
             gap: 14px;
             flex-wrap: wrap;
-        }
-
-        .avatar-mini {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: var(--bg-elevated);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            flex-shrink: 0;
-            border: 2px solid var(--accent);
-            font-size: 1.5rem;
-            color: rgba(255,255,255,0.4);
-        }
-        .avatar-mini img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
         }
 
         .request-info {
@@ -227,29 +178,6 @@
             border-radius: 6px;
         }
 
-        /* ===== Пусто/ошибка ===== */
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: var(--text-muted);
-        }
-        .empty-state i {
-            font-size: 3rem;
-            color: var(--text-dim);
-            display: block;
-            margin-bottom: 1rem;
-        }
-
-        .error-box {
-            background: rgba(255,71,64,0.08);
-            border: 1px solid rgba(255,71,64,0.3);
-            color: var(--danger);
-            border-radius: 1rem;
-            padding: 1.2rem 1.4rem;
-            text-align: center;
-        }
-
-        /* ===== Мобильная адаптация ===== */
         @media (max-width: 640px) {
             .request-row {
                 gap: 10px;
@@ -306,7 +234,7 @@
         <button class="btn-outline-filter" data-filter="REJECTED">❌ REJECTED (<span id="countRejected">0</span>)</button>
         <span class="filter-spacer"></span>
         <span class="last-updated" id="lastUpdated"></span>
-        <button id="refreshBtn" class="refresh-btn" title="Обновить">
+        <button id="refreshBtn" class="btn-refresh" title="Обновить">
             <i class="bi bi-arrow-repeat"></i>
         </button>
     </div>
@@ -366,11 +294,11 @@
 
     function getStatusBadge(status) {
         const map = {
-            'PENDING': '<span class="pending-badge"><i class="bi bi-clock-history"></i> PENDING</span>',
-            'ACCEPTED': '<span class="accepted-badge"><i class="bi bi-check-circle-fill"></i> ACCEPTED</span>',
-            'REJECTED': '<span class="rejected-badge"><i class="bi bi-x-circle-fill"></i> REJECTED</span>'
+            'PENDING': '<span class="status-badge pending"><i class="bi bi-clock-history"></i> PENDING</span>',
+            'ACCEPTED': '<span class="status-badge accepted"><i class="bi bi-check-circle-fill"></i> ACCEPTED</span>',
+            'REJECTED': '<span class="status-badge rejected"><i class="bi bi-x-circle-fill"></i> REJECTED</span>'
         };
-        return map[status] || `<span class="request-meta">${escapeHtml(status)}</span>`;
+        return map[status] || `<span class="status-badge neutral">${escapeHtml(status)}</span>`;
     }
 
     function renderRequests(requests, filter = 'all') {
@@ -381,7 +309,7 @@
             container.innerHTML = `
                 <div class="empty-state">
                     <i class="bi bi-inbox"></i>
-                    <h5 style="color:var(--text); margin-bottom:0.5rem;">Нет заявок</h5>
+                    <h4>Нет заявок</h4>
                     <p>По текущему фильтру заявок не найдено</p>
                 </div>
             `;
@@ -524,8 +452,8 @@
 
         } catch (err) {
             listEl.innerHTML = `
-                <div class="error-box">
-                    <i class="bi bi-exclamation-triangle-fill" style="font-size:1.6rem; display:block; margin-bottom:8px;"></i>
+                <div class="error-state">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
                     <strong>Ошибка загрузки:</strong> ${escapeHtml(err.message)}
                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">Проверьте подключение к интернету или доступность Firestore</div>
                 </div>

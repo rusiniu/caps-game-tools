@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Caps Staking — Тепловая карта</title>
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
     <!-- Open Graph -->
@@ -26,40 +25,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/common.css">
     <style>
-        /* ===== Табы ===== */
-        .staking-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 1.5rem;
-        }
-
-        .staking-tab {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            border-radius: 60px;
-            border: 2px solid transparent;
-            background: var(--bg-card);
-            font-weight: 700;
-            font-size: 0.85rem;
-            color: var(--text);
-            cursor: pointer;
-            transition: 0.2s;
-            user-select: none;
-        }
-        .staking-tab:hover { transform: translateY(-2px); border-color: var(--border-strong); }
-        .staking-tab.active { color: #0f1419; box-shadow: 0 8px 18px -8px rgba(0,0,0,0.6); }
-        .staking-tab .tab-count {
-            background: rgba(255,255,255,0.1);
-            padding: 1px 9px;
-            border-radius: 30px;
-            font-size: 0.7rem;
-        }
-        .staking-tab.active .tab-count { background: rgba(0,0,0,0.18); color: #0f1419; }
-
-        /* ===== Легенда ===== */
         .legend-bar {
             display: flex;
             flex-wrap: wrap;
@@ -109,42 +74,6 @@
             box-shadow: var(--shadow);
         }
 
-        .staking-card-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-
-        .staking-card-logo {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--bg-header) 0%, var(--bg-header-2) 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            padding: 5px;
-            flex-shrink: 0;
-            border: 1px solid var(--border);
-        }
-        .staking-card-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .staking-card-logo .placeholder { font-size: 1.2rem; opacity: 0.4; }
-
-        .staking-card-title {
-            font-weight: 800;
-            font-size: 0.95rem;
-            color: var(--text);
-            line-height: 1.2;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            flex: 1;
-            min-width: 0;
-        }
-
-        /* ===== Строка из 4 ячеек ===== */
         .grade-cells {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -235,7 +164,7 @@
         </div>
     </div>
 
-    <div class="staking-tabs" id="stakingTabs"></div>
+    <div class="pill-tabs" id="stakingTabs"></div>
 
     <div class="legend-bar">
         <span class="label">Коэффициент (TON/час):</span>
@@ -341,7 +270,7 @@
             const isActive = type === currentType;
             const style = isActive ? `background:${info.color}; border-color:${info.color};` : '';
             return `
-                <div class="staking-tab ${isActive ? 'active' : ''}" data-type="${escapeHtml(type)}" style="${style}">
+                <div class="pill-tab ${isActive ? 'active' : ''}" data-type="${escapeHtml(type)}" style="${style}">
                     <span>${info.emoji}</span>
                     <span>${escapeHtml(info.label)}</span>
                     <span class="tab-count">${counts[type]}</span>
@@ -349,7 +278,7 @@
             `;
         }).join('');
 
-        tabsEl.querySelectorAll('.staking-tab').forEach(tab => {
+        tabsEl.querySelectorAll('.pill-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 currentType = tab.dataset.type;
                 renderTabs();
@@ -379,14 +308,14 @@
 
             return `
                 <div class="staking-card" data-collection="${escapeHtml(col.id)}">
-                    <div class="staking-card-header">
-                        <div class="staking-card-logo">
+                    <div class="entity-header" style="padding-bottom:0;margin-bottom:0;border-bottom:none;">
+                        <div class="entity-logo">
                             ${logoUrl
-                                ? `<img src="${logoUrl}" alt="" onerror="this.parentNode.innerHTML='<span class=\\'placeholder\\'>🎴</span>'">`
+                                ? `<img src="${logoUrl}" alt="" onerror="this.parentNode.innerHTML='<span style=\\'placeholder\\'>🎴</span>'">`
                                 : '<span class="placeholder">🎴</span>'
                             }
                         </div>
-                        <div class="staking-card-title" title="${escapeHtml(col.title)}">${escapeHtml(col.title)}</div>
+                        <div class="entity-title" title="${escapeHtml(col.title)}" style="font-size:0.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(col.title)}</div>
                     </div>
                     <div class="grade-cells">${cellsHtml}</div>
                 </div>
@@ -418,7 +347,6 @@
                 const speed = speedData[gradeKey] ?? null;
 
                 if (floorTon == null || speed == null || speed <= 0) {
-                    // Нет данных
                     cell.classList.remove('loading');
                     cell.classList.add('empty');
                     cell.innerHTML = `
@@ -480,7 +408,6 @@
                 '<div style="color:var(--danger);">Не удалось загрузить коллекции</div>';
             return;
         }
-
         currentType = TYPE_ORDER.find(t => collectionsList.some(c => c.type === t)) || 'special';
         renderTabs();
         renderGrid();

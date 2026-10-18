@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Caps Game — Галерея коллекций</title>
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
     <!-- Open Graph -->
@@ -41,8 +40,7 @@
         </div>
     </div>
 
-    <!-- Табы по типам коллекций -->
-    <div class="collection-tabs" id="collectionTabs">
+    <div class="pill-tabs" id="collectionTabs">
         <div style="padding: 1rem; color: var(--text-muted);">Загрузка типов…</div>
     </div>
 
@@ -104,11 +102,8 @@
     // ---------- Табы ----------
     function renderTabs() {
         const tabsEl = document.getElementById('collectionTabs');
-
         const counts = {};
-        collectionsList.forEach(c => {
-            counts[c.type] = (counts[c.type] || 0) + 1;
-        });
+        collectionsList.forEach(c => { counts[c.type] = (counts[c.type] || 0) + 1; });
 
         const types = TYPE_ORDER.filter(t => counts[t] > 0)
             .concat(Object.keys(counts).filter(t => !TYPE_ORDER.includes(t)));
@@ -121,13 +116,9 @@
         tabsEl.innerHTML = types.map(type => {
             const info = getCollectionTypeInfo(type);
             const isActive = type === currentType;
-            const style = isActive
-                ? `background:${info.color}; border-color:${info.color};`
-                : '';
+            const style = isActive ? `background:${info.color}; border-color:${info.color};` : '';
             return `
-                <div class="collection-tab ${isActive ? 'active' : ''}"
-                     data-type="${escapeHtml(type)}"
-                     style="${style}">
+                <div class="pill-tab ${isActive ? 'active' : ''}" data-type="${escapeHtml(type)}" style="${style}">
                     <span>${info.emoji}</span>
                     <span>${escapeHtml(info.label)}</span>
                     <span class="tab-count">${counts[type]}</span>
@@ -135,7 +126,7 @@
             `;
         }).join('');
 
-        tabsEl.querySelectorAll('.collection-tab').forEach(tab => {
+        tabsEl.querySelectorAll('.pill-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 currentType = tab.dataset.type;
                 renderTabs();
@@ -248,7 +239,7 @@
                 <i class="bi bi-images"></i> Карточки коллекции
                 <span style="margin-left:auto; font-weight:600; font-size:0.85rem; color:var(--text-muted);">🃏 Всего: ${col.size}</span>
             </div>
-            <div class="grid-3cols">
+            <div class="modal-chips-grid">
         `;
 
         for (let i = 1; i <= col.size; i++) {
@@ -293,15 +284,12 @@
     // ---------- Инициализация ----------
     async function init() {
         collectionsList = await fetchCollectionsList();
-
         if (!collectionsList.length) {
             document.getElementById('collectionTabs').innerHTML =
                 '<div style="padding:1rem;color:var(--danger);">❌ Не удалось загрузить коллекции</div>';
             return;
         }
-
         currentType = TYPE_ORDER.find(t => collectionsList.some(c => c.type === t)) || collectionsList[0].type;
-
         renderTabs();
         renderMiniGrid();
     }
