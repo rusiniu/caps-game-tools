@@ -14,6 +14,7 @@ const CONFIG = {
         const mask = fields.map(f => `mask.fieldPaths=${encodeURIComponent(f)}`).join('&');
         return `https://firestore.googleapis.com/v1/projects/capsgame-prod/databases/(default)/documents/CapsGD/v1?${mask}`;
     },
+    CAP_DOC_API: (id) => `https://firestore.googleapis.com/v1/projects/capsgame-prod/databases/(default)/documents/Caps/${encodeURIComponent(id)}`,
     SQUAD_ID: '-1002917473074',
     PAGE_SIZE: 50,
     GRADE_ORDER: ['COMMON', 'COMMON_PLUS', 'RARE', 'RARE_PLUS', 'EPIC', 'EPIC_PLUS', 'LEGEND', 'LEGEND_PLUS', 'DIAMOND'],
@@ -282,6 +283,18 @@ async function fetchPlayerProfile(tgId) {
     if (!data.fields) throw new Error('Неверный формат ответа');
     return data;
 }
+
+    async function fetchCapById(capId) {
+        const url = CONFIG.CAP_DOC_API(capId);
+        const response = await fetch(url);
+        if (!response.ok) {
+            if (response.status === 404) throw new Error('Фишка не найдена (404)');
+            throw new Error(`Ошибка API: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (!data.fields) throw new Error('Неверный формат ответа');
+        return data;
+    }
 
 function getUrlParam(param) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -596,6 +609,8 @@ window.CapsTools = {
     fetchSquadInfo,
     fetchRequestsPage,
     fetchAllRequests,
+    //
+    fetchCapById,
     // Общее
     buildImageUrl,
     // Finder

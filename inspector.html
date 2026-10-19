@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Caps Inspector — Карточка фишки</title>
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Caps Game Tools">
+    <meta property="og:title" content="Caps Inspector — Карточка фишки">
+    <meta property="og:description" content="Детальная карточка фишки Caps по внутреннему ID.">
+    <meta property="og:image" content="og-preview.png">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Caps Inspector — Карточка фишки">
+    <meta name="twitter:description" content="Детальная карточка фишки Caps по внутреннему ID.">
+    <meta name="twitter:image" content="og-preview.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        .inspector-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            color: var(--text);
+        }
+
+        .inspector-header {
+            background: linear-gradient(105deg, var(--bg-header) 0%, var(--bg-header-2) 100%);
+            color: white;
+            padding: 1.3rem 1.8rem;
+            border-bottom: 3px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .inspector-chip-img {
+            width: 88px;
+            height: 88px;
+            border-radius: 16px;
+            background: rgba(0,0,0,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 6px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .inspector-chip-img img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .inspector-title-wrap {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .inspector-title {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.15;
+        }
+
+        .inspector-sub {
+            font-size: 0.85rem;
+            color: rgba(232,237,242,0.7);
+            margin-top: 4px;
+        }
+
+        .inspector-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .insp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 11px;
+            border-radius: 40px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .inspector-body {
+            padding: 1.5rem 1.8rem;
+        }
+
+        .inspector-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 1.4rem;
+        }
+        @media (max-width: 720px) {
+            .inspector-metrics { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* ===== Таймлайн апгрейдов ===== */
+        .upgrade-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+        }
+
+        .upgrade-step {
+            display: flex;
+            gap: 14px;
+            position: relative;
+            padding-bottom: 18px;
+        }
+        .upgrade-step:last-child {
+            padding-bottom: 0;
+        }
+
+        .upgrade-step-marker {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 4px;
+            border: 2px solid var(--accent);
+            background: var(--bg-card);
+            position: relative;
+            z-index: 1;
+        }
+        .upgrade-step:not(:last-child)::before {
+            content: "";
+            position: absolute;
+            left: 6px;
+            top: 18px;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-strong);
+        }
+
+        .upgrade-step-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .upgrade-step-grades {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 0.88rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .upgrade-step-grades .arrow {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+        }
+
+        .upgrade-step-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .upgrade-step-meta .meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .upgrade-step-meta .auto-badge {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .upgrade-step-meta .manual-badge {
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .grade-mini {
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        /* ===== Владелец ===== */
+        .owner-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.9rem;
+        }
+        .owner-username {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+
+        /* ===== Метаданные ===== */
+        .meta-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 24px;
+            font-size: 0.82rem;
+            color: var(--text);
+        }
+        .meta-grid .meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .meta-grid .meta-item i {
+            color: var(--text-muted);
+        }
+        .meta-grid code {
+            background: rgba(255,255,255,0.06);
+            padding: 1px 6px;
+            border-radius: 6px;
+            font-family: 'Inter', monospace;
+            font-size: 0.75rem;
+            color: var(--text);
+        }
+
+        @media (max-width: 640px) {
+            .inspector-header { padding: 1.1rem 1.2rem; }
+            .inspector-chip-img { width: 68px; height: 68px; border-radius: 12px; }
+            .inspector-title { font-size: 1.15rem; }
+            .inspector-body { padding: 1rem; }
+            .section-block { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="site-header">
+        <h1><i class="bi bi-search"></i> Caps Inspector</h1>
+        <p>Детальная карточка фишки по внутреннему ID</p>
+        <div class="site-nav">
+            <a href="index.html" class="nav-link-custom"><i class="bi bi-house"></i> Портал</a>
+            <a href="market.html" class="nav-link-custom"><i class="bi bi-graph-up"></i> Минимальные цены</a>
+            <a href="staking.html" class="nav-link-custom"><i class="bi bi-thermometer-half"></i> Стейкинг</a>
+            <a href="collections.html" class="nav-link-custom"><i class="bi bi-images"></i> Галерея</a>
+            <a href="recruiter.html" class="nav-link-custom"><i class="bi bi-person-badge"></i> Рекрутер</a>
+            <a href="finder.html" class="nav-link-custom"><i class="bi bi-search"></i> Финдер</a>
+            <a href="inspector.html" class="nav-link-custom active"><i class="bi bi-search"></i> Инспектор</a>
+        </div>
+    </div>
+
+    <div id="content">
+        <div class="empty-state">
+            <i class="bi bi-hourglass-split"></i>
+            <div>Загрузка…</div>
+        </div>
+    </div>
+
+    <div class="site-footer">
+        <i class="bi bi-cloud-check"></i> Данные из игры CapsGame (Firestore)
+    </div>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+(function() {
+    'use strict';
+
+    const {
+        escapeHtml,
+        buildImageUrl,
+        getFieldValue,
+        getUrlParam,
+        getGradeInfo,
+        getStatusInfo,
+        getGradeClass,
+        fetchCapById
+    } = window.CapsTools;
+
+
+    const ID_PATTERN = /^[A-Za-z0-9]{20}$/;
+
+    const contentEl = document.getElementById('content');
+
+    function renderError(message, hint) {
+        contentEl.innerHTML = `
+            <div class="error-state">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <h4>${escapeHtml(message)}</h4>
+                ${hint ? `<p style="margin:6px 0 16px; font-size:0.85rem; color:var(--text-muted);">${escapeHtml(hint)}</p>` : ''}
+                <a href="finder.html" class="btn-gold" style="padding:10px 24px; font-size:0.9rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                    <i class="bi bi-search"></i> Перейти в финдер
+                </a>
+            </div>
+        `;
+    }
+
+    function formatDate(iso) {
+        if (!iso) return '—';
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return '—';
+        return d.toLocaleString('ru-RU', {
+            day: 'numeric', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+    }
+
+    function formatDateShort(iso) {
+        if (!iso) return '—';
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return '—';
+        return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function shortenId(id) {
+        if (!id) return '—';
+        return id.length > 10 ? id.slice(0, 8) + '…' : id;
+    }
+
+    // Парсинг массива upgrades из fields
+    function parseUpgrades(fields) {
+        const raw = fields.upgrades?.arrayValue?.values || [];
+        return raw.map(item => {
+            const f = item?.mapValue?.fields || {};
+            return {
+                id: getFieldValue(f, 'id', null),
+                fromGrade: getFieldValue(f, 'fromGrade', null),
+                toGrade: getFieldValue(f, 'toGrade', null),
+                upgradedAt: f.upgradedAt?.timestampValue || null,
+                isAuto: getFieldValue(f, 'isAuto', false)
+            };
+        });
+    }
+
+    // Владелец
+    function resolveOwner(fields) {
+        return {
+            tgId: getFieldValue(fields, 'owner', null)
+        };
+    }
+
+    function renderChip(doc) {
+        const fields = doc.fields || {};
+
+        const collection = getFieldValue(fields, 'collection', '—');
+        const collectionId = getFieldValue(fields, 'collectionId', '—');
+        const number = getFieldValue(fields, 'number', null);
+        const collectionNumber = getFieldValue(fields, 'collectionNumber', null);
+        const grade = getFieldValue(fields, 'grade', 'COMMON');
+        const gradeNumber = getFieldValue(fields, 'gradeNumber', null);
+        const status = getFieldValue(fields, 'status', 'UNKNOWN');
+        const isNft = getFieldValue(fields, 'isNft', false);
+        const url = getFieldValue(fields, 'url', null);
+        const packId = getFieldValue(fields, 'packId', null);
+        const wasLocked = getFieldValue(fields, 'wasLocked', false);
+        const createdAt = fields.createdAt?.timestampValue || null;
+        const lastChangedAt = fields.lastChangedAt?.timestampValue || null;
+        const docId = doc.name?.split('/').pop() || getFieldValue(fields, 'id', '—');
+
+        const gradeInfo = getGradeInfo(grade);
+        const statusInfo = getStatusInfo(status);
+        const imageUrl = url ? buildImageUrl(url) : null;
+
+        const upgrades = parseUpgrades(fields);
+        const owner = resolveOwner(fields);
+
+        // Скин
+        const skinObj = fields.skin?.mapValue?.fields || null;
+        let skinInfo = null;
+        if (skinObj) {
+            const outline = skinObj.outline?.mapValue?.fields || {};
+            skinInfo = {
+                source: getFieldValue(outline, 'source', null),
+                type: getFieldValue(outline, 'type', null),
+                skin: getFieldValue(outline, 'skin', null),
+                rerolls: getFieldValue(skinObj, 'rerolls', 0)
+            };
+        }
+
+        const gradeLabel = grade.replace('_PLUS', '+');
+
+        // ===== HTML =====
+        let html = `
+        <div class="inspector-card fade-in">
+            <div class="inspector-header">
+                <div class="inspector-chip-img">
+                    ${imageUrl
+                        ? `<img src="${imageUrl}" alt="chip" loading="lazy" onerror="this.parentNode.innerHTML='<i class=\\'bi bi-image\\' style=\\'font-size:2rem;color:rgba(255,255,255,0.4)\\'>'">`
+                        : '<i class="bi bi-image" style="font-size:2rem;color:rgba(255,255,255,0.4);"></i>'
+                    }
+                </div>
+                <div class="inspector-title-wrap">
+                    <h3 class="inspector-title">${escapeHtml(collection)}${number !== null ? ` #${number}` : ''}</h3>
+                    <div class="inspector-sub">${escapeHtml(collectionId)}${collectionNumber !== null ? ` · #${collectionNumber} в коллекции` : ''}</div>
+                    <div class="inspector-badges">
+                        <span class="insp-badge" style="background:${gradeInfo.color}cc; color:#fff; border-color:rgba(255,255,255,0.15);">
+                            ${escapeHtml(gradeLabel)}
+                        </span>
+                        <span class="insp-badge">
+                            ${statusInfo.emoji} ${escapeHtml(statusInfo.label)}
+                        </span>
+                        ${isNft ? `<span class="insp-badge"><i class="bi bi-link-45deg"></i> NFT</span>` : ''}
+                        ${skinInfo ? `<span class="insp-badge"><i class="bi bi-palette"></i> ${escapeHtml(skinInfo.skin || 'skin')}</span>` : ''}
+                        ${wasLocked ? `<span class="insp-badge"><i class="bi bi-lock-fill"></i> была заблокирована</span>` : ''}
+                    </div>
+                </div>
+            </div>
+
+            <div class="inspector-body">
+                <div class="inspector-metrics">
+                    <div class="stat-tile">
+                        <span class="tile-icon">🎨</span>
+                        <div class="tile-value" style="font-size:1.1rem;">${escapeHtml(gradeLabel)}</div>
+                        <div class="tile-label">Грейд</div>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="tile-icon">📅</span>
+                        <div class="tile-value" style="font-size:0.95rem;">${escapeHtml(formatDateShort(createdAt))}</div>
+                        <div class="tile-label">Создана</div>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="tile-icon">🔄</span>
+                        <div class="tile-value" style="font-size:0.95rem;">${escapeHtml(formatDateShort(lastChangedAt))}</div>
+                        <div class="tile-label">Изменена</div>
+                    </div>
+                    <div class="stat-tile">
+                        <span class="tile-icon">⬆️</span>
+                        <div class="tile-value">${upgrades.length}</div>
+                        <div class="tile-label">Апгрейдов</div>
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <div class="section-title"><i class="bi bi-arrow-up-circle-fill"></i> Путь прокачки</div>
+                    ${upgrades.length === 0
+                        ? '<div class="section-subnote">Фишка не прокачивалась</div>'
+                        : `<div class="upgrade-timeline">
+                            ${upgrades.map(u => `
+                                <div class="upgrade-step">
+                                    <div class="upgrade-step-marker"></div>
+                                    <div class="upgrade-step-content">
+                                        <div class="upgrade-step-grades">
+                                            <span class="grade-mini ${getGradeClass(u.fromGrade)}">${escapeHtml((u.fromGrade || '—').replace('_PLUS', '+'))}</span>
+                                            <i class="bi bi-arrow-right arrow"></i>
+                                            <span class="grade-mini ${getGradeClass(u.toGrade)}">${escapeHtml((u.toGrade || '—').replace('_PLUS', '+'))}</span>
+                                        </div>
+                                        <div class="upgrade-step-meta">
+                                            <span class="meta-item"><i class="bi bi-calendar3"></i> ${escapeHtml(formatDate(u.upgradedAt))}</span>
+                                            <span class="meta-item ${u.isAuto ? 'auto-badge' : 'manual-badge'}">
+                                                <i class="bi ${u.isAuto ? 'bi-robot' : 'bi-hand-index-thumb'}"></i>
+                                                ${u.isAuto ? 'авто' : 'вручную'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>`
+                    }
+                </div>
+
+                ${skinInfo ? `
+                <div class="section-block">
+                    <div class="section-title"><i class="bi bi-palette-fill"></i> Скин</div>
+                    <div class="meta-grid">
+                        <span class="meta-item"><i class="bi bi-brush"></i> Цвет: <strong>${escapeHtml(skinInfo.skin || '—')}</strong></span>
+                        <span class="meta-item"><i class="bi bi-box"></i> Источник: <strong>${escapeHtml(skinInfo.source || '—')}</strong></span>
+                        <span class="meta-item"><i class="bi bi-tag"></i> Тип: <strong>${escapeHtml(skinInfo.type || '—')}</strong></span>
+                        <span class="meta-item"><i class="bi bi-arrow-repeat"></i> Рероллов: <strong>${skinInfo.rerolls}</strong></span>
+                    </div>
+                </div>
+                ` : ''}
+
+                <div class="section-block">
+                    <div class="section-title"><i class="bi bi-person-fill"></i> Владелец</div>
+                    <div class="owner-block">
+                        ${owner.tgId
+                            ? `<div class="owner-username">TG ID: <code style="background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:6px;font-family:'Inter',monospace;font-size:0.8rem;">${escapeHtml(String(owner.tgId))}</code></div>`
+                            : `<div class="owner-username">Информация о владельце недоступна</div>`
+                        }
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <div class="section-title"><i class="bi bi-info-circle"></i> Метаданные</div>
+                    <div class="meta-grid">
+                        ${collectionNumber !== null ? `<span class="meta-item"><i class="bi bi-hash"></i> Номер в коллекции: <code>${collectionNumber}</code></span>` : ''}
+                        ${gradeNumber !== null ? `<span class="meta-item"><i class="bi bi-layers"></i> Индекс грейда: <code>${gradeNumber}</code></span>` : ''}
+                        ${packId ? `<span class="meta-item"><i class="bi bi-box-seam"></i> Пак: <code title="${escapeHtml(packId)}">${escapeHtml(shortenId(packId))}</code></span>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+
+        return html;
+    }
+
+    async function loadChip(id) {
+        contentEl.innerHTML = `
+            <div class="empty-state">
+                <i class="bi bi-hourglass-split"></i>
+                <div>Загрузка фишки…</div>
+            </div>
+        `;
+
+        try {
+            const doc = await fetchCapById(id);
+            contentEl.innerHTML = renderChip(doc);
+        } catch (err) {
+            if (err.message && err.message.includes('404')) {
+                renderError('Фишка не найдена', 'Возможно, ID указан неверно или фишка больше не существует.');
+            } else {
+                renderError('Ошибка загрузки', err.message || 'Проверьте интернет и попробуйте позже.');
+            }
+        }
+    }
+
+    function init() {
+        const id = getUrlParam('id');
+
+        if (!id) {
+            renderError('ID фишки не указан', 'Этот инструмент принимает ID фишки в адресе. Найти ID можно в финдере.');
+            return;
+        }
+
+        if (!ID_PATTERN.test(id)) {
+            renderError('Некорректный ID фишки', 'ID должен состоять из 20 латинских букв и цифр.');
+            return;
+        }
+
+        loadChip(id);
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
