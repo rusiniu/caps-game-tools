@@ -352,6 +352,40 @@ body {
     padding-top: 1.8rem;
 }
 
+.status-banner {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background: linear-gradient(135deg, #3a1d1d 0%, #2a1515 100%);
+    border: 1px solid #7a2f2f;
+    border-left: 5px solid #e05252;
+    border-radius: var(--border-radius);
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+}
+.status-banner-icon {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.status-banner-body { min-width: 0; }
+.status-banner-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ff8f8f;
+    margin-bottom: 0.5rem;
+}
+.status-banner-text {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: rgba(232, 237, 242, 0.8);
+    margin-bottom: 0.4rem;
+}
+.status-banner-text:last-child { margin-bottom: 0; }
+.status-banner-text strong { color: #fff; }
+
 .text-accent { color: var(--accent); }
 .bg-accent { background: var(--accent); }
 
